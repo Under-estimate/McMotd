@@ -23,8 +23,8 @@
 5. 安装完成。
 ## 权限列表
 *有关权限部分的说明，参见[mirai-console的权限文档](https://github.com/mamoe/mirai-console/blob/master/docs/Permissions.md )*  
-根权限： `org.zrnq.wiki:*`  
-基本操作权限： `org.zrnq.wiki:command.wiki`
+根权限： `org.zrnq.mcmotd:*`  
+基本操作权限： `org.zrnq.wiki:command.mcmotd`
 - 包含所有命令执行的权限。
 ## 插件命令
 > mcp <服务器地址> : 查询指定地址上的服务器信息
