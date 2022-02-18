@@ -3,6 +3,7 @@ package org.zrnq.mclient
 import org.xbill.DNS.Lookup
 import org.xbill.DNS.SRVRecord
 import org.xbill.DNS.Type
+import org.zrnq.mcmotd.PluginConfig
 import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Dimension
@@ -14,7 +15,7 @@ import javax.swing.*
 import javax.swing.border.EmptyBorder
 import kotlin.concurrent.thread
 
-val FONT = Font("Microsoft YaHei", Font.PLAIN, 20)
+lateinit var FONT : Font
 
 fun main() {
 
