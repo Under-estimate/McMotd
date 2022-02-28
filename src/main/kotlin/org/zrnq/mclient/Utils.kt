@@ -32,12 +32,16 @@ fun paintString(str : String, g : Graphics2D, x : Int, y : Int, w : Int, h : Int
     paint(g.create(x, y, w, h))
 }
 
-fun paintDescription(desc : JSONObject, g : Graphics2D, x : Int, y : Int, w : Int, h : Int) = JLabel().apply {
+fun paintDescription(desc : String, g : Graphics2D, x : Int, y : Int, w : Int, h : Int) = JLabel().apply {
     setSize(w, h)
-    text = jsonStringToHTML(desc)
+    text = if(desc.startsWith("{")) jsonStringToHTML(JSON.parseObject(desc))
+        else textToHTML(desc)
     font = g.font
     paint(g.create(x, y, w, h))
 }
+
+fun textToHTML(str : String)
+    = "<html><span style='color:white;'>${str.replace(" ", "&nbsp;").replace("\n", "<br />")}</span></html>"
 
 fun flatTextJSON(result : JSONArray, src : JSONObject) {
     val currentIndex = result.size

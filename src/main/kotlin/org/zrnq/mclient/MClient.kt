@@ -34,6 +34,7 @@ fun pingExternal(target : String) : Any {
                 image = renderInfoImage(it.first, it.second)
                 break
             } catch (ex : Exception) {
+                ex.printStackTrace()
                 errBuilder.append("${it.first}:${it.second} => ${ex.javaClass.name.substringAfterLast('.')}:${ex.message}\n")
             }
         }
@@ -64,7 +65,7 @@ fun renderInfoImage(address : String, port : Int) : BufferedImage {
             horizontalAlignment = SwingConstants.CENTER
         }
     g.drawRect(border, border, height - 2 * border, height - 2 * border)
-    paintDescription(json.getJSONObject("description"), g, height, border, width - border - height, height / 2 - border)
+    paintDescription(json.getString("description"), g, height, border, width - border - height, height / 2 - border)
     val playerJson = json.getJSONObject("players")
     var playerDescription = "获取失败"
     if(playerJson != null)
