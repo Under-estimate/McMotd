@@ -3,7 +3,6 @@ package org.zrnq.mclient
 import org.xbill.DNS.Lookup
 import org.xbill.DNS.SRVRecord
 import org.xbill.DNS.Type
-import org.zrnq.mcmotd.PluginConfig
 import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Dimension
@@ -18,7 +17,7 @@ import kotlin.concurrent.thread
 lateinit var FONT : Font
 
 fun main() {
-
+    FONT = Font("Microsoft YaHei UI", Font.PLAIN, 20)
     val mainFrame = JFrame("Ping MC Server")
     val progress = JProgressBar().apply { isIndeterminate = true; isVisible = false; isStringPainted = true; font = FONT }
     val resultLabel = JLabel().apply { font = FONT; foreground = Color.RED }

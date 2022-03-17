@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "org.zrnq"
-version = "1.0.2"
+version = "1.1.0"
 
 repositories {
     maven("https://maven.aliyun.com/repository/public")
@@ -19,4 +19,9 @@ dependencies {
     implementation(kotlin("reflect"))
     implementation("com.alibaba:fastjson:1.2.79")
     implementation("dnsjava:dnsjava:3.5.0")
+}
+
+tasks.create("CopyToLib", Copy::class) {
+    into("${buildDir}/output/libs")
+    from(configurations.runtimeClasspath)
 }

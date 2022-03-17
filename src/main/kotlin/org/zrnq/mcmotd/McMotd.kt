@@ -8,13 +8,12 @@ import net.mamoe.mirai.utils.info
 import org.zrnq.mclient.FONT
 import java.awt.Font
 import java.awt.GraphicsEnvironment
-import kotlin.math.log
 
 object McMotd : KotlinPlugin(
     JvmPluginDescription(
         id = "org.zrnq.mcmotd",
         name = "Minecraft MOTD Fetcher",
-        version = "1.0.2",
+        version = "1.1.0",
     ) {
         author("ZRnQ")
         info("""以图片的形式获取指定Minecraft服务器的基本信息""")
@@ -23,7 +22,10 @@ object McMotd : KotlinPlugin(
     override fun onEnable() {
         logger.info { "McMotd is loading" }
         PluginConfig.reload()
+        PluginData.reload()
         QueryCommand.register()
+        BindCommand.register()
+        DelCommand.register()
         val fontList = mutableListOf<Font>()
         for(f in GraphicsEnvironment.getLocalGraphicsEnvironment().allFonts) {
             if(f.name == PluginConfig.fontName) {
@@ -48,6 +50,8 @@ object McMotd : KotlinPlugin(
     override fun onDisable() {
         logger.info { "McMotd is unloading" }
         QueryCommand.unregister()
+        BindCommand.unregister()
+        DelCommand.register()
     }
 }
 
