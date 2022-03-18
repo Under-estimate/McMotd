@@ -14,13 +14,13 @@
 > 2. 如果您没有使用[Mirai Console Loader](https://github.com/iTXTech/mirai-console-loader )，您可以在[这里](https://github.com/project-mirai/chat-command/releases )下载最新的[chat-command](https://github.com/project-mirai/chat-command )插件文件，并将其一同放入[mirai-console](https://github.com/mamoe/mirai-console )运行生成的`plugins`文件夹中。
 4. 启动[mirai-console](https://github.com/mamoe/mirai-console )之后，在后台命令行输入以下命令授予相关用户使用此插件命令的权限：
 > - 如果您希望所有群的群员都可以使用此插件，请输入：  
-> `/perm grant m* org.zrnq.mcmotd:mcp` (仅可使用`mcp`指令)  
+> `/perm grant m* org.zrnq.mcmotd:command.mcp` (仅可使用`mcp`指令)  
 > `/perm grant m* org.zrnq.mcmotd:*` (可使用全部指令)
 > - 如果您希望只授予某一个群的群员使用此插件的权限，请输入：  
-> `/perm grant m<QQ群号>.* org.zrnq.mcmotd:mcp` (仅可使用`mcp`指令)  
+> `/perm grant m<QQ群号>.* org.zrnq.mcmotd:command.mcp` (仅可使用`mcp`指令)  
 > `/perm grant m<QQ群号>.* org.zrnq.mcmotd:*` (可使用全部指令)
 > - 如果您希望只授予某一个群的特定群员使用此插件的权限，请输入：  
-> `/perm grant m<QQ群号>.<群员QQ号> org.zrnq.mcmotd:mcp` (仅可使用`mcp`指令)  
+> `/perm grant m<QQ群号>.<群员QQ号> org.zrnq.mcmotd:command.mcp` (仅可使用`mcp`指令)  
 > `/perm grant m<QQ群号>.<群员QQ号> org.zrnq.mcmotd:*` (可使用全部指令)
 > - 如果你希望了解更多高级权限设置方法，请参阅[mirai-console的权限文档](https://github.com/mamoe/mirai-console/blob/master/docs/Permissions.md )
 5. 安装完成。
@@ -34,6 +34,9 @@
 > mcp (服务器地址/服务器名称) : 查询指定地址或绑定到指定名称上的服务器信息，当本群仅绑定了一个服务器时可省略参数  
 > mcadd <服务器名称> <服务器地址> : 将指定地址的服务器绑定到指定名称上。各个群聊绑定的服务器相互独立。  
 > mcdel <服务器名称> : 删除指定名称的服务器
+## 插件配置
+### 字体配置
+如果您的系统中安装了多个字体，您可以在`/config/org.zrnq.mcmotd/mcmotd.yml`中设置渲染图片时使用的字体名称。
 
 其中，服务器地址可以仅有域名，如`mc.example.com`，也可以带有端口号，如`mc.example.com:12345`
 
