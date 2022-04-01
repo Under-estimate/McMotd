@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "org.zrnq"
-version = "1.1.0"
+version = "1.1.1"
 
 repositories {
     maven("https://maven.aliyun.com/repository/public")

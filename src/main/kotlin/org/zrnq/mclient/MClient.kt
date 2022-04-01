@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONObject
 import org.xbill.DNS.Lookup
 import org.xbill.DNS.SRVRecord
 import org.xbill.DNS.Type
+import org.zrnq.mclient.output.AbstractOutputHandler
 import java.awt.*
 import java.awt.image.BufferedImage
 import java.net.InetSocketAddress
@@ -14,10 +15,9 @@ import javax.swing.*
 
 const val addressPrefix = "_minecraft._tcp."
 
-fun pingExternal(target : String) : Any {
-    var image : BufferedImage? = null
-    val errBuilder = StringBuilder("查询失败，以下地址均未能成功获取:\n")
+fun pingInternal(target : String, outputHandler : AbstractOutputHandler) {
     try {
+        outputHandler.beforePing()
         val option = target.split(":")
         val addressList = mutableListOf<Pair<String, Int>>()
         if(option.size > 1) {
@@ -31,17 +31,19 @@ fun pingExternal(target : String) : Any {
         }
         for(it in addressList) {
             try {
-                image = renderInfoImage(it.first, it.second)
-                break
+                outputHandler.onAttemptAddress("${it.first}:${it.second}")
+                outputHandler.onSuccess(renderInfoImage(it.first, it.second))
+                outputHandler.afterPing()
+                return
             } catch (ex : Exception) {
-                ex.printStackTrace()
-                errBuilder.append("${it.first}:${it.second} => ${ex.javaClass.name.substringAfterLast('.')}:${ex.message}\n")
+                outputHandler.onAttemptFailure(ex, "${it.first}:${it.second}")
             }
         }
+        outputHandler.onFailure()
+        outputHandler.afterPing()
     } catch (e : Exception) {
         e.printStackTrace()
     }
-    return image ?: errBuilder.toString()
 }
 
 fun renderInfoImage(address : String, port : Int) : BufferedImage {
@@ -81,7 +83,10 @@ fun renderInfoImage(address : String, port : Int) : BufferedImage {
     return result
 }
 
-fun getPlayerList(list : JSONArray) = list.map { (it as JSONObject).getString("name") }.joinToString(", ")
+fun getPlayerList(list : JSONArray) : String {
+    return if(list.isEmpty()) "空"
+    else list.joinToString(", ") { (it as JSONObject).getString("name") }
+}
 
 fun getInfo(address : String, port : Int = 25565) : Pair<String, String> {
     val socket = Socket()
@@ -103,9 +108,12 @@ fun getInfo(address : String, port : Int = 25565) : Pair<String, String> {
     val result = Packet(input, PString::class).data[0].value as String
 
     val latency = try {
-        output.write(Packet(1, PLong(System.currentTimeMillis())).byteArray)
+        val time = System.currentTimeMillis()
+        output.write(Packet(1, PLong(time)).byteArray)
         output.flush()
-        (System.currentTimeMillis() - Packet(input, PLong::class).data[0].value as Long).toString() + "ms"
+        // https://wiki.vg/Protocol#Ping : The returned value from server could be any number
+        Packet(input, PLong::class)
+        (System.currentTimeMillis() - time).toString() + "ms"
     } catch (e : Exception) {
         "Failed"
     }

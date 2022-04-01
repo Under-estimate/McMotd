@@ -1,7 +1,6 @@
 package org.zrnq.mcmotd
 
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.mamoe.mirai.console.command.CommandSender
 import net.mamoe.mirai.console.command.MemberCommandSender
@@ -9,6 +8,7 @@ import net.mamoe.mirai.console.command.SimpleCommand
 import net.mamoe.mirai.console.util.sendAnsiMessage
 import net.mamoe.mirai.message.data.At
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
+import org.zrnq.mclient.output.APIOutputHandler
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -50,17 +50,14 @@ object QueryCommand :  SimpleCommand(McMotd, "mcp", description = "获取指定M
     }
 
 
-    private suspend fun CommandSender.doPing(target : String) = withContext(Dispatchers.Default) {
-        launch {
-            val result = withContext(Dispatchers.IO) {
-                org.zrnq.mclient.pingExternal(target)
-            }
-            if(result is String) {
-                reply(result)
-            } else {
-                reply(result as BufferedImage)
-            }
-        }
+    private suspend fun CommandSender.doPing(target : String) = withContext(Dispatchers.IO) {
+        var error : String? = null
+        var image : BufferedImage? = null
+        org.zrnq.mclient.pingInternal(target, APIOutputHandler(McMotd.logger, { error = it }, { image = it }))
+        if(image == null)
+            reply(error!!)
+        else
+            reply(image!!)
     }
 }
 
