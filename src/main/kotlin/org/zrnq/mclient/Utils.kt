@@ -7,7 +7,6 @@ import java.awt.Color
 import java.awt.Graphics2D
 import java.awt.Toolkit
 import java.io.ByteArrayInputStream
-import java.io.File
 import java.util.*
 import javax.imageio.ImageIO
 import javax.swing.JFrame
@@ -35,13 +34,10 @@ fun paintString(str : String, g : Graphics2D, x : Int, y : Int, w : Int, h : Int
 fun paintDescription(desc : String, g : Graphics2D, x : Int, y : Int, w : Int, h : Int) = JLabel().apply {
     setSize(w, h)
     text = if(desc.startsWith("{")) jsonStringToHTML(JSON.parseObject(desc))
-        else textToHTML(desc)
+        else jsonStringToHTML(JSON.parseObject("{\"text\":\"$desc\"}"))
     font = g.font
     paint(g.create(x, y, w, h))
 }
-
-fun textToHTML(str : String)
-    = "<html><span style='color:white;'>${str.replace(" ", "&nbsp;").replace("\n", "<br />")}</span></html>"
 
 fun flatTextJSON(result : JSONArray, src : JSONObject) {
     val currentIndex = result.size
@@ -60,6 +56,14 @@ fun flatTextJSON(result : JSONArray, src : JSONObject) {
     result.add(currentIndex, paragraph)
 }
 
+private const val RAW = 8
+private const val SEQ = 0
+private const val COLOR = 0
+private const val BOLD = 1
+private const val ITALIC = 2
+private const val UNDERLINE = 3
+private const val STRIKE = 4
+
 fun jsonStringToHTML(json : JSON) : String{
     val line = JSONArray()
     when (json) {
@@ -68,25 +72,78 @@ fun jsonStringToHTML(json : JSON) : String{
         else -> throw IllegalArgumentException("Description syntax error")
     }
     val builder = StringBuilder("<html>")
+
+    val attributes = Array<Any?>(RAW * 2) { null }
+
+    fun color() = (attributes[SEQ + COLOR] ?: attributes[RAW + COLOR] ?: "white") as String
+    fun bold() = (attributes[SEQ + BOLD] ?: attributes[RAW + BOLD] ?: false) as Boolean
+    fun italic() = (attributes[SEQ + ITALIC] ?: attributes[RAW + ITALIC] ?: false) as Boolean
+    fun underline() = (attributes[SEQ + UNDERLINE] ?: attributes[RAW + UNDERLINE] ?: false) as Boolean
+    fun strike() = (attributes[SEQ + STRIKE] ?: attributes[RAW + STRIKE] ?: false) as Boolean
+    fun styleSpan() : String {
+        val sb = StringBuilder("<span style='color: ${color().let{if(it.startsWith("#")) it else colorMap[it]}};")
+        if(bold()) sb.append("font-weight: bold;")
+        if(italic()) sb.append("font-style: italic;")
+        if(strike() || underline()) {
+            sb.append("text-decoration:")
+            if(strike()) sb.append(" line-through")
+            if(underline()) sb.append(" underline")
+            sb.append(";")
+        }
+        sb.append("'>")
+        return sb.toString()
+    }
+    val spanEnd = "</span>"
+    var escapeSeq = false
+
     for(i in line.indices) {
         val paragraph = line.getJSONObject(i)
-        val color = paragraph.getStringOrDefault("color", "white")
-        builder.append("<span style='color: ${if(color.startsWith("#")) color else colorMap[color]};")
-        if(paragraph.getBooleanOrDefault("bold"))
-            builder.append("font-weight: bold;")
-        if(paragraph.getBooleanOrDefault("italic"))
-            builder.append("font-style: italic;")
-        val strikethrough = paragraph.getBooleanOrDefault("strikethrough")
-        val underlined = paragraph.getBooleanOrDefault("underlined")
-        if(strikethrough || underlined) {
-            builder.append("text-decoration:")
-            if(strikethrough) builder.append(" line-through")
-            if(underlined) builder.append(" underline")
-            builder.append(";")
+        attributes[RAW + COLOR] = paragraph["color"]
+        attributes[RAW + BOLD] = paragraph["bold"]
+        attributes[RAW + ITALIC] = paragraph["italic"]
+        attributes[RAW + UNDERLINE] = paragraph["underlined"]
+        attributes[RAW + STRIKE] = paragraph["strikethrough"]
+        builder.append(styleSpan())
+        val text = paragraph.getStringOrDefault("text", "")
+        for(c in text) {
+            if(escapeSeq) {
+                if(c in '0'..'9' || c in 'a'..'f') {
+                    attributes[SEQ + COLOR] = colorSequence[c.digitToInt(16)]
+                    attributes[SEQ + BOLD] = null
+                    attributes[SEQ + STRIKE] = null
+                    attributes[SEQ + UNDERLINE] = null
+                    attributes[SEQ + ITALIC] = null
+                } else if(c in 'l'..'r') {
+                    when(c) {
+                        'l' -> attributes[SEQ + BOLD] = true
+                        'm' -> attributes[SEQ + STRIKE] = true
+                        'n' -> attributes[SEQ + UNDERLINE] = true
+                        'o' -> attributes[SEQ + ITALIC] = true
+                        'r' -> {
+                            attributes[SEQ + COLOR] = null
+                            attributes[SEQ + BOLD] = null
+                            attributes[SEQ + STRIKE] = null
+                            attributes[SEQ + UNDERLINE] = null
+                            attributes[SEQ + ITALIC] = null
+                        }
+                    }
+                }
+                escapeSeq = false
+                builder.append(spanEnd)
+                    .append(styleSpan())
+            } else {
+                if(c == '§') escapeSeq = true
+                else builder.append(when(c) {
+                    '<' -> "&lt;"
+                    '>' -> "&gt;"
+                    '&' -> "&amp;"
+                    ' ' -> "&nbsp;"
+                    '\n' -> "<br />"
+                    else -> c
+                })
+            }
         }
-        builder.append("'>")
-            .append(paragraph.getStringOrDefault("text").replace(" ", "&nbsp;").replace("\n", "<br />"))
-            .append("<span>")
+        builder.append(spanEnd)
     }
     builder.append("</html>")
     return builder.toString()
@@ -94,13 +151,6 @@ fun jsonStringToHTML(json : JSON) : String{
 
 fun JSONObject.getStringOrDefault(key : String, default : String = "") : String =
     if(containsKey(key)) getString(key) else default
-
-fun JSONObject.getBooleanOrDefault(key : String, default : Boolean = false) : Boolean =
-    if(containsKey(key)) getBoolean(key) else default
-
-fun File.createChild(name : String) =
-    if(isDirectory) File("$absolutePath\\$name")
-    else throw IllegalArgumentException("$this is not a directory.")
 
 fun JFrame.centerOnScreen() {
     val screen = Toolkit.getDefaultToolkit().screenSize
@@ -124,3 +174,22 @@ val colorMap = mapOf(
     "light_purple" to   "#ff55ff",
     "yellow" to         "#ffff55",
     "white" to          "#ffffff")
+
+val colorSequence = listOf(
+    "#000000",
+    "#0000aa",
+    "#00aa00",
+    "#00aaaa",
+    "#aa0000",
+    "#aa00aa",
+    "#ffaa00",
+    "#aaaaaa",
+    "#555555",
+    "#5555ff",
+    "#55ff55",
+    "#55ffff",
+    "#ff5555",
+    "#ff55ff",
+    "#ffff55",
+    "#ffffff"
+)
