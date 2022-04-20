@@ -53,7 +53,7 @@ object QueryCommand :  SimpleCommand(McMotd, "mcp", description = "获取指定M
     private suspend fun CommandSender.doPing(target : String) = withContext(Dispatchers.IO) {
         var error : String? = null
         var image : BufferedImage? = null
-        org.zrnq.mclient.pingInternal(target, APIOutputHandler(McMotd.logger, { error = it }, { image = it }))
+        org.zrnq.mclient.pingInternal(target, APIOutputHandler(McMotd.logger, { error = it }, { image = it }), PluginConfig.showTrueAddress)
         if(image == null)
             reply(error!!)
         else

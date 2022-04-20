@@ -15,7 +15,7 @@ import javax.swing.*
 
 const val addressPrefix = "_minecraft._tcp."
 
-fun pingInternal(target : String, outputHandler : AbstractOutputHandler) {
+fun pingInternal(target : String, outputHandler : AbstractOutputHandler, showTrueAddress : Boolean = true) {
     try {
         outputHandler.beforePing()
         val option = target.split(":")
@@ -32,7 +32,7 @@ fun pingInternal(target : String, outputHandler : AbstractOutputHandler) {
         for(it in addressList) {
             try {
                 outputHandler.onAttemptAddress("${it.first}:${it.second}")
-                outputHandler.onSuccess(renderInfoImage(it.first, it.second))
+                outputHandler.onSuccess(if(showTrueAddress) renderInfoImage(it.first, it.second) else renderInfoImage(it.first, it.second, target))
                 outputHandler.afterPing()
                 return
             } catch (ex : Exception) {
@@ -46,7 +46,7 @@ fun pingInternal(target : String, outputHandler : AbstractOutputHandler) {
     }
 }
 
-fun renderInfoImage(address : String, port : Int) : BufferedImage {
+fun renderInfoImage(address : String, port : Int, renderAddress : String = "$address:$port") : BufferedImage {
     val info = getInfo(address, port)
     val border = 20
     val width = 1000
@@ -76,7 +76,7 @@ fun renderInfoImage(address : String, port : Int) : BufferedImage {
         if(playerJson.containsKey("sample")) "玩家列表：${getPlayerList(playerJson.getJSONArray("sample")).limitLength(50)}"
         else "玩家列表：没有信息"
     paintString("""
-        访问地址 ${address}:${port}      Ping: ${info.second}
+        访问地址: $renderAddress      Ping: ${info.second}
         ${json.getJSONObject("version").getString("name")}
         在线人数: $playerDescription""".trimIndent()
         , g, height, height / 2, width - border - height, height / 2 - border)
