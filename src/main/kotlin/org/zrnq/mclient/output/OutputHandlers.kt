@@ -4,6 +4,7 @@ import net.mamoe.mirai.utils.MiraiLogger
 import org.zrnq.mclient.FONT
 import org.zrnq.mclient.centerOnScreen
 import org.zrnq.mclient.pingInternal
+import org.zrnq.mclient.translateCommonException
 import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Dimension
@@ -40,7 +41,9 @@ abstract class AbstractOutputHandler {
      * */
     abstract fun afterPing()
 }
-
+/**
+ * Debug use only
+ * */
 class GUIOutputHandler : AbstractOutputHandler() {
     private val errBuilder = StringBuilder()
     private val mainFrame = JFrame("Ping MC Server")
@@ -98,7 +101,7 @@ class GUIOutputHandler : AbstractOutputHandler() {
 
     override fun onAttemptFailure(exception : Exception, address : String) {
         exception.printStackTrace()
-        errBuilder.append("$address => $exception<br />")
+        errBuilder.append("${exception.translateCommonException()}<br />")
     }
 
     override fun onFailure() {
@@ -130,8 +133,10 @@ class APIOutputHandler(
     override fun onAttemptAddress(address : String) = Unit
 
     override fun onAttemptFailure(exception : Exception, address : String) {
-        logger.warning("MC Ping Failed", exception)
-        errBuilder.append("$address => ${exception.javaClass.name.substringAfterLast('.')}:${exception.message}\n")
+        val message = exception.translateCommonException()
+        if(message.contains(':'))
+            logger.warning("MC Ping Failed", exception)
+        errBuilder.append("$message\n")
     }
 
     override fun onFailure() = fail(errBuilder.toString())

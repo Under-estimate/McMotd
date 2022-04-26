@@ -12,6 +12,16 @@ import javax.imageio.ImageIO
 import javax.swing.JFrame
 import javax.swing.JLabel
 
+fun Exception.translateCommonException()
+= when {
+    matches<java.net.ConnectException>("Connection timed out: connect") -> "连接服务器超时"
+    matches<java.net.SocketTimeoutException>("Read timed out") -> "连接服务器超时"
+    matches<java.net.UnknownHostException>() -> "找不到目标主机"
+    else -> "${javaClass.name.substringAfterLast('.')}:$message"
+}
+
+inline fun <reified E> Exception.matches(msg : String? = null) = this::class == E::class && (msg == null || message == msg)
+
 fun String.limitLength(max : Int) = if (length > max) this.substring(0, max) + "..." else this
 
 fun paintBase64Image(img : String, g : Graphics2D, x : Int, y : Int, w : Int, h : Int) {
