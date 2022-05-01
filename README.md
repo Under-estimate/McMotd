@@ -1,4 +1,4 @@
-# Mirai-wiki
+# McMotd
 [![mirai](https://img.shields.io/badge/mirai-v2.10.0-brightgreen)](https://github.com/mamoe/mirai )  
 基于[mirai](https://github.com/mamoe/mirai )的Minecraft服务器信息查询插件
 
