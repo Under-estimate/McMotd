@@ -77,7 +77,7 @@ fun renderInfoImage(address : String, port : Int, renderAddress : String = "$add
         else "玩家列表：没有信息"
     paintString("""
         访问地址: $renderAddress      Ping: ${info.second}
-        ${json.getJSONObject("version").getString("name")}
+        ${json.getJSONObject("version").getString("name").limitLength(50)}
         在线人数: $playerDescription""".trimIndent()
         , g, height, height / 2, width - border - height, height / 2 - border)
     return result

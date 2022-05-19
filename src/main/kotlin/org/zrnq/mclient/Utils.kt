@@ -15,6 +15,7 @@ import javax.swing.JLabel
 fun Exception.translateCommonException()
 = when {
     matches<java.net.ConnectException>("Connection timed out: connect") -> "连接服务器超时"
+    matches<java.net.ConnectException>("Connection refused: connect") -> "无法连接到服务器"
     matches<java.net.SocketTimeoutException>("Read timed out") -> "连接服务器超时"
     matches<java.net.UnknownHostException>() -> "找不到目标主机"
     else -> "${javaClass.name.substringAfterLast('.')}:$message"
@@ -34,7 +35,7 @@ fun paintBase64Image(img : String, g : Graphics2D, x : Int, y : Int, w : Int, h 
 
 fun paintString(str : String, g : Graphics2D, x : Int, y : Int, w : Int, h : Int, block : JLabel.() -> Unit = {}) = JLabel().apply {
     setSize(w, h)
-    text = "<html><span style='color:white;'>${str.replace(" ", "&nbsp;").replace("\n", "<br />")}</span></html>"
+    text = "<html><span style='color:white;white-space:nowrap;text-overflow:ellipsis;'>${str.replace(" ", "&nbsp;").replace("\n", "<br />")}</span></html>"
     foreground = Color.WHITE
     font = g.font
     block()
