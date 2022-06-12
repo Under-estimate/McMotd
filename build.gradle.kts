@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "org.zrnq"
-version = "1.1.5"
+version = "1.1.6"
 
 repositories {
     maven("https://maven.aliyun.com/repository/public")
@@ -17,7 +17,7 @@ repositories {
 
 dependencies {
     implementation(kotlin("reflect"))
-    implementation("com.alibaba:fastjson:1.2.79")
+    implementation("com.alibaba:fastjson:1.2.83")
     implementation("dnsjava:dnsjava:3.5.0")
 }
 

@@ -1,5 +1,6 @@
 package org.zrnq.mcmotd
 
+import com.alibaba.fastjson.parser.ParserConfig
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.unregister
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
@@ -13,7 +14,7 @@ object McMotd : KotlinPlugin(
     JvmPluginDescription(
         id = "org.zrnq.mcmotd",
         name = "Minecraft MOTD Fetcher",
-        version = "1.1.5",
+        version = "1.1.6",
     ) {
         author("ZRnQ")
         info("""以图片的形式获取指定Minecraft服务器的基本信息""")
@@ -21,6 +22,7 @@ object McMotd : KotlinPlugin(
 ) {
     override fun onEnable() {
         logger.info { "McMotd is loading" }
+        ParserConfig.getGlobalInstance().isSafeMode = true
         PluginConfig.reload()
         PluginData.reload()
         QueryCommand.register()
