@@ -7,6 +7,7 @@ import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
 import net.mamoe.mirai.utils.info
 import org.zrnq.mclient.FONT
+import org.zrnq.mclient.dnsServerList
 import java.awt.Font
 import java.awt.GraphicsEnvironment
 
@@ -14,7 +15,7 @@ object McMotd : KotlinPlugin(
     JvmPluginDescription(
         id = "org.zrnq.mcmotd",
         name = "Minecraft MOTD Fetcher",
-        version = "1.1.6",
+        version = "1.1.7",
     ) {
         author("ZRnQ")
         info("""以图片的形式获取指定Minecraft服务器的基本信息""")
@@ -47,6 +48,10 @@ object McMotd : KotlinPlugin(
             logger.warning("正在使用第一个可用的字体: ${fontList[0].name}")
             fontList[0].deriveFont(20f)
         }
+        dnsServerList = if(PluginConfig.dnsServerList.isEmpty()) {
+            logger.warning("配置文件中没有填写DNS服务器地址，正在使用默认的DNS服务器")
+            listOf("223.5.5.5", "8.8.8.8")
+        } else dnsServerList
     }
 
     override fun onDisable() {

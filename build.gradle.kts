@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "org.zrnq"
-version = "1.1.6"
+version = "1.1.7"
 
 repositories {
     maven("https://maven.aliyun.com/repository/public")
@@ -19,6 +19,7 @@ dependencies {
     implementation(kotlin("reflect"))
     implementation("com.alibaba:fastjson:1.2.83")
     implementation("dnsjava:dnsjava:3.5.0")
+    implementation("org.slf4j:slf4j-nop:1.7.36")
 }
 
 tasks.create("CopyToLib", Copy::class) {

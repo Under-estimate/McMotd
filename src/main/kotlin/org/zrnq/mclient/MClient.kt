@@ -3,31 +3,43 @@ package org.zrnq.mclient
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
-import org.xbill.DNS.Lookup
-import org.xbill.DNS.SRVRecord
-import org.xbill.DNS.Type
+import org.xbill.DNS.*
 import org.zrnq.mclient.output.AbstractOutputHandler
 import java.awt.*
 import java.awt.image.BufferedImage
+import java.net.Inet4Address
 import java.net.InetSocketAddress
 import java.net.Socket
 import javax.swing.*
 
 const val addressPrefix = "_minecraft._tcp."
+private val dnsResolvers by lazy {
+    dnsServerList.map { SimpleResolver(Inet4Address.getByName(it)) }
+}
+
+private fun Resolver.query(name : String) : List<Record> {
+    return send(Message.newQuery(Record.newRecord(Name.fromString(name), Type.SRV, DClass.IN)))
+        .getSection(Section.ANSWER)
+}
 
 fun pingInternal(target : String, outputHandler : AbstractOutputHandler, showTrueAddress : Boolean = true) {
     try {
         outputHandler.beforePing()
         val option = target.split(":")
         val addressList = mutableListOf<Pair<String, Int>>()
+        val nameSet = mutableSetOf<String>()
         if(option.size > 1) {
             addressList.add(option[0] to option[1].toInt())
         } else {
-            Lookup("$addressPrefix${option[0]}", Type.SRV).run()?.forEach {
-                check(it is SRVRecord)
-                addressList.add(it.target.toString(true) to it.port)
-            }
             addressList.add(option[0] to 25565)
+            for(dnsResolver in dnsResolvers) {
+                dnsResolver.query("$addressPrefix${option[0]}.").forEach { rec ->
+                    check(rec is SRVRecord)
+                    rec.target.toString(true)
+                        .takeIf { addr -> nameSet.add(addr) }
+                        ?.also { addr -> addressList.add(addr to rec.port) }
+                }
+            }
         }
         for(it in addressList) {
             try {

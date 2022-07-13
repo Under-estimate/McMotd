@@ -42,6 +42,7 @@
 | -- | -- | -- |
 | fontName | 字符串(默认`Microsoft YaHei`) | 指定渲染图片时使用的字体名称 |
 | showTrueAddress | 布尔值(默认`false`) | 设置为`true`时，服务器状态图片中显示服务器的真实地址。设置为`false`时，服务器状态图片中显示服务器的SRV地址 |
+| dnsServerList | 字符串列表 | 指定进行SRV解析时所用的DNS服务器 |
 
 ## FAQ
 ### Q: 在QQ群中发送命令没反应
