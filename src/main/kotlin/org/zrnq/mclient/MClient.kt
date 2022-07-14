@@ -14,7 +14,10 @@ import javax.swing.*
 
 const val addressPrefix = "_minecraft._tcp."
 private val dnsResolvers by lazy {
-    dnsServerList.map { SimpleResolver(Inet4Address.getByName(it)) }
+    dnsServerList.map {
+        SimpleResolver(Inet4Address.getByName(it))
+        .also { resolver -> resolver.timeout = java.time.Duration.ofSeconds(2) }
+    }
 }
 
 private fun Resolver.query(name : String) : List<Record> {
@@ -33,12 +36,18 @@ fun pingInternal(target : String, outputHandler : AbstractOutputHandler, showTru
         } else {
             addressList.add(option[0] to 25565)
             for(dnsResolver in dnsResolvers) {
-                dnsResolver.query("$addressPrefix${option[0]}.").forEach { rec ->
-                    check(rec is SRVRecord)
-                    rec.target.toString(true)
-                        .takeIf { addr -> nameSet.add(addr) }
-                        ?.also { addr -> addressList.add(addr to rec.port) }
-                }
+                runCatching {
+                    dnsResolver.query("$addressPrefix${option[0]}.")
+                }.fold({
+                    it.forEach { rec ->
+                        check(rec is SRVRecord)
+                        rec.target.toString(true)
+                            .takeIf { addr -> nameSet.add(addr) }
+                            ?.also { addr -> addressList.add(addr to rec.port) }
+                    }
+                }, {
+                    System.err.println("SRV解析出错，请检查DNS服务器配置项[${dnsResolver.address}]：${it.message}")
+                })
             }
         }
         for(it in addressList) {
