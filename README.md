@@ -29,12 +29,17 @@
 根权限： `org.zrnq.mcmotd:*`  
 获取MC服务器信息： `org.zrnq.mcmotd:command.mcp`  
 绑定服务器到群聊： `org.zrnq.mcmotd:command.mcadd`  
-删除群聊绑定的服务器： `org.zrnq.mcmotd:command.mcdel`
+删除群聊绑定的服务器： `org.zrnq.mcmotd:command.mcdel`  
+启动/停止服务器的在线人数记录功能： `org.zrnq.mcmotd:command.mcrec`
 ## 插件命令
 > /mcp (服务器地址/服务器名称) : 查询指定地址或绑定到指定名称上的服务器信息，当本群仅绑定了一个服务器时可省略参数。
 其中，服务器地址可以仅有域名，如`mc.example.com`，也可以带有端口号，如`mc.example.com:12345`  
+
 > /mcadd <服务器名称> <服务器地址> : 将指定地址的服务器绑定到指定名称上。各个群聊绑定的服务器相互独立。  
-> /mcdel <服务器名称> : 删除指定名称的服务器
+
+> /mcdel <服务器名称> : 删除指定名称的服务器  
+
+> /mcrec <服务器地址> (true/false) : 启动/停止对于指定服务器的在线人数记录，仅有启用了在线人数记录的服务器才会在查询结果图片中附加历史在线人数信息
 ## 插件配置
 插件的配置文件位于`/config/org.zrnq.mcmotd/mcmotd.yml`  
 
@@ -43,6 +48,9 @@
 | fontName | 字符串(默认`Microsoft YaHei`) | 指定渲染图片时使用的字体名称 |
 | showTrueAddress | 布尔值(默认`false`) | 设置为`true`时，服务器状态图片中显示服务器的真实地址。设置为`false`时，服务器状态图片中显示服务器的SRV地址 |
 | dnsServerList | 字符串列表 | 指定进行SRV解析时所用的DNS服务器 |
+| recordOnlinePlayer | 字符串列表 | 已启用历史在线人数记录的服务器 |
+| recordInterval | 整数 | 记录在线人数的时间间隔(秒) |
+| recordLimit | 整数 | 最长保留的在线人数记录时间(秒) |
 
 ## FAQ
 ### Q: 在QQ群中发送命令没反应
