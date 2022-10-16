@@ -9,6 +9,9 @@ import net.mamoe.mirai.console.util.sendAnsiMessage
 import net.mamoe.mirai.message.data.At
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import org.zrnq.mclient.output.APIOutputHandler
+import org.zrnq.mclient.renderBasicInfoImage
+import org.zrnq.mclient.secondToReadableTime
+import org.zrnq.mcmotd.ImageUtil.appendPlayerHistory
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -53,7 +56,7 @@ object QueryCommand :  SimpleCommand(McMotd, "mcp", description = "获取指定M
     private suspend fun CommandSender.doPing(target : String) = withContext(Dispatchers.IO) {
         var error : String? = null
         var image : BufferedImage? = null
-        org.zrnq.mclient.pingInternal(target, APIOutputHandler(McMotd.logger, { error = it }, { image = it }), PluginConfig.showTrueAddress)
+        org.zrnq.mclient.pingInternal(target, APIOutputHandler(McMotd.logger, { error = it }, { image = renderBasicInfoImage(it).appendPlayerHistory(target) }))
         if(image == null)
             reply(error!!)
         else
@@ -94,6 +97,39 @@ object DelCommand : SimpleCommand(McMotd, "mcdel", description = "删除当前�
         serverList.remove(existing)
         PluginData[this.group.id] = serverList
         reply("删除成功")
+    }
+}
+
+@Suppress("unused")
+object RecordCommand : SimpleCommand(McMotd, "mcrec", description = "指定需要记录在线人数的服务器") {
+    @Handler
+    suspend fun MemberCommandSender.handle() {
+        if(PluginConfig.recordOnlinePlayer.isEmpty()) {
+            reply("没有已启用在线人数记录的服务器，使用\"/mcrec <服务器地址> true\"以开始记录指定服务器的在线人数")
+            return
+        }
+        reply("已启用在线人数记录的服务器:${PluginConfig.recordOnlinePlayer.joinToString(",")}。每${PluginConfig.recordInterval.secondToReadableTime()}记录一次在线人数，最多保存${PluginConfig.recordLimit.secondToReadableTime()}之前的记录。")
+    }
+
+    @Handler
+    suspend fun MemberCommandSender.handle(address : String) {
+        if(PluginConfig.recordOnlinePlayer.contains(address))
+            reply("服务器[$address]已启用在线人数记录，使用\"/mcrec $address false\"来禁用此服务器的在线人数记录功能")
+        else
+            reply("服务器[$address]未启用在线人数记录，使用\"/mcrec $address true\"来在此服务器上启用在线人数记录")
+    }
+
+    @Handler
+    suspend fun MemberCommandSender.handle(address : String, enable : Boolean) {
+        if(enable) {
+            if(!PluginConfig.recordOnlinePlayer.contains(address))
+                PluginConfig.recordOnlinePlayer.add(address)
+            reply("已开始记录${address}的在线人数")
+        } else {
+            PluginConfig.recordOnlinePlayer.remove(address)
+            PluginData.history.remove(address)
+            reply("已停止记录${address}的在线人数")
+        }
     }
 }
 

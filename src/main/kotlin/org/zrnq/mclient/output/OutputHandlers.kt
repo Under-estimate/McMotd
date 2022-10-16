@@ -1,16 +1,12 @@
 package org.zrnq.mclient.output
 
 import net.mamoe.mirai.utils.MiraiLogger
-import org.zrnq.mclient.FONT
-import org.zrnq.mclient.centerOnScreen
-import org.zrnq.mclient.pingInternal
-import org.zrnq.mclient.translateCommonException
+import org.zrnq.mclient.*
 import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
-import java.awt.image.BufferedImage
 import javax.swing.*
 import javax.swing.border.EmptyBorder
 import kotlin.concurrent.thread
@@ -35,7 +31,7 @@ abstract class AbstractOutputHandler {
     /**
      * Called if one server address returns a valid response, and before afterPing().
      * */
-    abstract fun onSuccess(image : BufferedImage)
+    abstract fun onSuccess(info : ServerInfo)
     /**
      * Called after each ping request, and after onFailure() and onSuccess().
      * */
@@ -47,12 +43,12 @@ abstract class AbstractOutputHandler {
 class GUIOutputHandler : AbstractOutputHandler() {
     private val errBuilder = StringBuilder()
     private val mainFrame = JFrame("Ping MC Server")
-    private val progress = JProgressBar().apply { isIndeterminate = true; isVisible = false; isStringPainted = true; font = FONT }
-    private val resultLabel = JLabel().apply { font = FONT; foreground = Color.RED }
+    private val progress = JProgressBar().apply { isIndeterminate = true; isVisible = false; isStringPainted = true; font = MClientOptions.FONT }
+    private val resultLabel = JLabel().apply { font = MClientOptions.FONT; foreground = Color.RED }
     private val textField = JTextField()
     init {
         textField.apply {
-            font = FONT
+            font = MClientOptions.FONT
             preferredSize = Dimension(500, preferredSize.height)
             addKeyListener(object : KeyAdapter() {
                 override fun keyPressed(e : KeyEvent) {
@@ -67,7 +63,7 @@ class GUIOutputHandler : AbstractOutputHandler() {
         }
         val inputPane = JPanel().apply {
             layout = BorderLayout(20, 20)
-            add(JLabel("Ping Target:").apply { font = FONT }, BorderLayout.WEST)
+            add(JLabel("Ping Target:").apply { font = MClientOptions.FONT }, BorderLayout.WEST)
             add(JPanel().apply {
                 layout = BorderLayout()
                 add(progress, BorderLayout.CENTER)
@@ -108,8 +104,8 @@ class GUIOutputHandler : AbstractOutputHandler() {
         resultLabel.text = errBuilder.append("</span></html>").toString()
     }
 
-    override fun onSuccess(image : BufferedImage) {
-        resultLabel.icon = ImageIcon(image)
+    override fun onSuccess(info : ServerInfo) {
+        resultLabel.icon = ImageIcon(renderBasicInfoImage(info))
     }
 
     override fun afterPing() {
@@ -122,7 +118,7 @@ class GUIOutputHandler : AbstractOutputHandler() {
 class APIOutputHandler(
     private val logger : MiraiLogger,
     private val fail : (String) -> Unit,
-    private val success : (BufferedImage) -> Unit
+    private val success : (ServerInfo) -> Unit
 ) : AbstractOutputHandler() {
     private val errBuilder = StringBuilder()
     override fun beforePing() {
@@ -136,12 +132,12 @@ class APIOutputHandler(
         val message = exception.translateCommonException()
         if(message.contains(':'))
             logger.warning("MC Ping Failed", exception)
-        errBuilder.append("$message\n")
+        errBuilder.append("$address:$message\n")
     }
 
     override fun onFailure() = fail(errBuilder.toString())
 
-    override fun onSuccess(image : BufferedImage) = success(image)
+    override fun onSuccess(info : ServerInfo) = success(info)
 
     override fun afterPing() = Unit
 }

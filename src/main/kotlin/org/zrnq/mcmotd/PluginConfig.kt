@@ -7,4 +7,7 @@ object PluginConfig : AutoSavePluginConfig("mcmotd") {
     val fontName by value("Microsoft YaHei")
     val showTrueAddress by value(false)
     val dnsServerList by value(mutableListOf("223.5.5.5", "8.8.8.8"))
+    val recordOnlinePlayer by value(mutableListOf<String>())
+    val recordInterval by value(300)
+    val recordLimit by value(21600)
 }

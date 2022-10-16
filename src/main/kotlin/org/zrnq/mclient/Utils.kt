@@ -12,6 +12,14 @@ import javax.imageio.ImageIO
 import javax.swing.JFrame
 import javax.swing.JLabel
 
+fun Int.secondToReadableTime() : String {
+    return when {
+        this < 60 -> "${this}s"
+        this < 3600 -> String.format("%.2fmin", this.toFloat() / 60)
+        else -> String.format("%.2fh", this.toFloat() / 3600)
+    }
+}
+
 fun Exception.translateCommonException()
 = when {
     matches<java.net.ConnectException>("Connection timed out: connect") -> "连接服务器超时"
