@@ -18,7 +18,7 @@ object McMotd : KotlinPlugin(
     JvmPluginDescription(
         id = "org.zrnq.mcmotd",
         name = "Minecraft MOTD Fetcher",
-        version = "1.1.9",
+        version = "1.1.10",
     ) {
         author("ZRnQ")
         info("""以图片的形式获取指定Minecraft服务器的基本信息""")
@@ -61,7 +61,7 @@ object McMotd : KotlinPlugin(
                     )
                 }
             }
-        }, MClientOptions.recordInterval.toLong() * 1000, MClientOptions.recordInterval.toLong() * 1000)
+        }, PluginConfig.recordInterval.toLong() * 1000, PluginConfig.recordInterval.toLong() * 1000)
     }
 
     private fun stopRecord() {

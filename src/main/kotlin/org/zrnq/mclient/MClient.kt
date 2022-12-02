@@ -5,6 +5,7 @@ import org.zrnq.mclient.output.AbstractOutputHandler
 import java.awt.Color
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
+import java.lang.StringBuilder
 import java.net.Inet4Address
 import java.net.InetSocketAddress
 import java.net.Socket
@@ -88,11 +89,10 @@ fun renderBasicInfoImage(info : ServerInfo) : BufferedImage {
     g.drawRect(border, border, height - 2 * border, height - 2 * border)
     paintDescription(info.description, g, height, border, width - border - height, height / 2 - border)
 
-    paintString("""
-        访问地址: ${info.serverAddress}      Ping: ${info.latency}
-        ${info.version.limitLength(50)}
-        ${info.playerDescription}""".trimIndent()
-        , g, height, height / 2, width - border - height, height / 2 - border)
+    val sb = StringBuilder("访问地址: ${info.serverAddress}      Ping: ${info.latency}")
+    if(MClientOptions.showServerVersion) sb.append("\n${info.version.limitLength(50)}")
+    sb.append("\n${info.playerDescription}")
+    paintString(sb.toString(), g, height, height / 2, width - border - height, height / 2 - border)
     return result
 }
 

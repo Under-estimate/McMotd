@@ -35,7 +35,9 @@ class ServerInfo(response : String, val latency : String) {
 
         playerDescription = run {
             if(onlinePlayerCount == null) return@run "服务器未提供在线玩家信息"
-            val playerCount = "在线人数: $onlinePlayerCount/$maxPlayerCount  玩家列表: "
+            var playerCount = "在线人数: $onlinePlayerCount/$maxPlayerCount  "
+            if(!MClientOptions.showPlayerList) return@run playerCount
+            playerCount += "玩家列表: "
             if(samplePlayerList == null) return@run playerCount + "没有信息"
             return@run playerCount + samplePlayerList.limitLength(50)
         }

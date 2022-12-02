@@ -9,7 +9,8 @@ object MClientOptions {
     lateinit var FONT : Font
     var dnsServerList = listOf("223.5.5.5", "8.8.8.8")
     var showTrueAddress = false
-    var recordInterval = 300
+    var showServerVersion = false
+    var showPlayerList = true
 
     fun loadPluginConfig() {
         dnsServerList = if(PluginConfig.dnsServerList.isEmpty()) {
@@ -17,7 +18,8 @@ object MClientOptions {
             listOf("223.5.5.5", "8.8.8.8")
         } else PluginConfig.dnsServerList
         showTrueAddress = PluginConfig.showTrueAddress
-        recordInterval = PluginConfig.recordInterval
+        showServerVersion = PluginConfig.showServerVersion
+        showPlayerList = PluginConfig.showPlayerList
 
         val fontList = mutableListOf<Font>()
         for(f in GraphicsEnvironment.getLocalGraphicsEnvironment().allFonts) {
