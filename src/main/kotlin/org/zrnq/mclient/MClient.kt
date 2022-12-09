@@ -92,7 +92,7 @@ fun renderBasicInfoImage(info : ServerInfo) : BufferedImage {
     val sb = StringBuilder("访问地址: ${info.serverAddress}      Ping: ${info.latency}")
     if(MClientOptions.showServerVersion) sb.append("\n${info.version.limitLength(50)}")
     sb.append("\n${info.playerDescription}")
-    paintString(sb.toString(), g, height, height / 2, width - border - height, height / 2 - border)
+    paintDescription(sb.toString(), g, height, height / 2, width - border - height, height / 2 - border)
     return result
 }
 
