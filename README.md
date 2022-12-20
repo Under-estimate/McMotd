@@ -1,5 +1,5 @@
 # McMotd
-[![mirai](https://img.shields.io/badge/mirai-v2.10.0-brightgreen)](https://github.com/mamoe/mirai )  
+[![mirai](https://img.shields.io/badge/mirai-v2.13.2-brightgreen)](https://github.com/mamoe/mirai )  
 基于[mirai](https://github.com/mamoe/mirai )的Minecraft服务器信息查询插件
 
 > 关于Linux运行环境  
@@ -7,6 +7,8 @@
 
 ## 如何安装
 1. 在[这里](https://github.com/Under-estimate/McMotd/releases/ )下载最新的插件文件。
+> 使用`.mirai.jar`还是`.mirai2.jar`：  
+> `mirai-console`自`2.11.0`版本起支持了[新的插件加载方式](https://github.com/mamoe/mirai/releases/tag/v2.11.0-M1)，如果您正在使用高版本`mirai-console`，则可以使用`.mirai2.jar`以避免可能的插件间依赖冲突；`.mirai.jar`为兼容插件格式，大多数版本的`mirai-console`均能使用。
 2. 将插件文件放入[mirai-console](https://github.com/mamoe/mirai-console )运行生成的`plugins`文件夹中。
 3. 如果您还未安装[chat-command](https://github.com/project-mirai/chat-command )插件(添加聊天环境中使用命令的功能)，你可以从下面选择一种方法安装此插件：
 > 1. 如果您正在使用[Mirai Console Loader](https://github.com/iTXTech/mirai-console-loader )来启动[mirai-console](https://github.com/mamoe/mirai-console )，您可以运行以下命令来安装[chat-command](https://github.com/project-mirai/chat-command )插件：  
