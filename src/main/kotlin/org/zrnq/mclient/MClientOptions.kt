@@ -4,6 +4,7 @@ import org.zrnq.mcmotd.McMotd
 import org.zrnq.mcmotd.PluginConfig
 import java.awt.Font
 import java.awt.GraphicsEnvironment
+import java.io.File
 
 object MClientOptions {
     lateinit var FONT : Font
@@ -20,6 +21,25 @@ object MClientOptions {
         showTrueAddress = PluginConfig.showTrueAddress
         showServerVersion = PluginConfig.showServerVersion
         showPlayerList = PluginConfig.showPlayerList
+
+        if(PluginConfig.fontPath.isNotBlank()) {
+            val fontFile = File(PluginConfig.fontPath)
+            if(!fontFile.exists()) {
+                McMotd.logger.warning("无法打开指定的字体文件: ${PluginConfig.fontPath}，请检查配置文件")
+            } else {
+                try {
+                    val font = Font.createFont(Font.TRUETYPE_FONT, fontFile)
+                    if(!GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(font)) {
+                        McMotd.logger.warning("注册字体文件到LocalGraphicsEnvironment时失败")
+                    }
+                    FONT = font.deriveFont(20f)
+                    McMotd.logger.info("正在使用字体文件: ${PluginConfig.fontPath} (${font.fontName})")
+                    return
+                } catch (e : Exception) {
+                    McMotd.logger.warning("读取字体文件: ${PluginConfig.fontPath}时出错", e)
+                }
+            }
+        }
 
         val fontList = mutableListOf<Font>()
         for(f in GraphicsEnvironment.getLocalGraphicsEnvironment().allFonts) {

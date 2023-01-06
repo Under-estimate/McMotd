@@ -55,6 +55,7 @@
 | recordOnlinePlayer | 字符串列表 | 已启用历史在线人数记录的服务器 |
 | recordInterval | 整数 | 记录在线人数的时间间隔(秒) |
 | recordLimit | 整数 | 最长保留的在线人数记录时间(秒) |
+| fontPath | 字符串(默认为空) | 指定渲染图片时所使用的字体文件，如果指定了字体文件并且被成功加载，则不会使用`fontName`配置项(此配置项正常情况下无需使用。如果无法使用系统字体，请使用此配置项指定字体文件([#14](https://github.com/Under-estimate/McMotd/issues/14))) |
 
 ## FAQ
 ### Q: 在QQ群中发送命令没反应

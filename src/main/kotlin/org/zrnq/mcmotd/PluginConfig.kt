@@ -4,6 +4,7 @@ import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.console.data.value
 
 object PluginConfig : AutoSavePluginConfig("mcmotd") {
+    val fontPath by value("")
     val fontName by value("Microsoft YaHei")
     val showTrueAddress by value(false)
     val showServerVersion by value(false)
