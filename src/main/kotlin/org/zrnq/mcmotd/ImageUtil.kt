@@ -1,11 +1,15 @@
 package org.zrnq.mcmotd
 
 import org.zrnq.mclient.MClientOptions
+import org.zrnq.mcmotd.ColorScheme.toTransparent
 import java.awt.*
 import java.awt.image.BufferedImage
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.math.ceil
 import kotlin.math.max
+import kotlin.math.tan
+import kotlin.random.Random
 
 object ImageUtil {
     fun BufferedImage.appendPlayerHistory(address : String) : BufferedImage {
@@ -32,8 +36,7 @@ object ImageUtil {
         g.drawString("在线人数趋势", 20, 20)
 
         if(history.size <= 1) {
-            g.color = Color(254, 71, 81)
-            g.paintTextCC("-=没有足够的数据来绘制图表，稍后再来吧=-", width / 2, height / 2)
+            g.drawErrorMessage("没有足够的数据来绘制图表，稍后再来吧", 0, 0, width, height)
             return result
         }
 
@@ -85,11 +88,11 @@ object ImageUtil {
             it.add(minX to maxY)
         }
 
-        g.paint = GradientPaint(minX.toFloat(), minY.toFloat(), Color(132, 188, 60, 150),
-            minX.toFloat(), maxY.toFloat(), Color(132, 188, 60, 0))
+        g.paint = GradientPaint(minX.toFloat(), minY.toFloat(), ColorScheme.darkGreen,
+            minX.toFloat(), maxY.toFloat(), ColorScheme.darkGreen.toTransparent())
         g.fillPolygon(polygon.map { it.first }.toIntArray(), polygon.map { it.second }.toIntArray(), polygon.size)
 
-        g.color = Color(132, 188, 60)
+        g.color = ColorScheme.brightGreen
         g.stroke = BasicStroke(3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
 
         g.drawPolyline(plot.map { it.first }.toIntArray(), plot.map { it.second }.toIntArray(), plot.size)
@@ -110,4 +113,47 @@ object ImageUtil {
     fun Graphics2D.paintTextCC(str : String, x : Int, y : Int) {
         drawString(str, x - fontMetrics.stringWidth(str) / 2, y + fontMetrics.ascent - fontMetrics.height / 2)
     }
+
+    fun Graphics2D.fillStripedRect(color1 : Color, color2 : Color, x : Int, y : Int, width : Int, height : Int) {
+        val angle = 45.0
+        val stripeWidth = 20
+        val offset = Random.Default.nextInt(0, stripeWidth * 2)
+        setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+        color = color1
+        fillRect(x, y, width, height)
+        color = color2
+        val deviation = height / tan(Math.toRadians(angle))
+        val limit = ceil((width + deviation) / stripeWidth).toInt()
+        for(i in 0..limit step 2) {
+            val base = x + i * stripeWidth - offset
+            fillPolygon(
+                intArrayOf(base, base + stripeWidth, base + stripeWidth - deviation.toInt(), base - deviation.toInt()),
+                intArrayOf(y, y, y + height, y + height),
+                4
+            )
+        }
+    }
+
+    fun Graphics2D.drawErrorMessage(msg : String, x : Int, y : Int, width: Int, height: Int) {
+        font = MClientOptions.FONT
+        fillStripedRect(Color.black, ColorScheme.darkRed, x, y, width, height)
+        val msgRectWidth = fontMetrics.stringWidth(msg) + 30
+        val msgRectHeight = fontMetrics.height + 20
+        color = Color.black
+        fillRect(x + (width - msgRectWidth) / 2, y + (height - msgRectHeight) / 2, msgRectWidth, msgRectHeight)
+        color = ColorScheme.darkRed
+        drawRect(x + (width - msgRectWidth) / 2, y + (height - msgRectHeight) / 2, msgRectWidth, msgRectHeight)
+        color = ColorScheme.brightRed
+        paintTextCC(msg, x + width / 2, y + height / 2)
+    }
+}
+
+object ColorScheme {
+    val brightRed = Color(254, 71, 81)
+    val darkRed = Color(201, 42, 42)
+    val brightGreen = Color(132, 188, 60)
+    val darkGreen = Color(132, 188, 60, 150)
+
+    fun Color.toTransparent()
+        = Color(red, green, blue, 0)
 }

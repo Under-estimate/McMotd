@@ -13,4 +13,7 @@ object PluginConfig : AutoSavePluginConfig("mcmotd") {
     val recordOnlinePlayer by value(mutableListOf<String>())
     val recordInterval by value(300)
     val recordLimit by value(21600)
+
+    val httpServerPort by value(0)
+    val httpServerMapping by value(mutableMapOf<String, String>())
 }

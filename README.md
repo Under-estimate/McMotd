@@ -56,10 +56,26 @@
 | recordInterval | 整数 | 记录在线人数的时间间隔(秒) |
 | recordLimit | 整数 | 最长保留的在线人数记录时间(秒) |
 | fontPath | 字符串(默认为空) | 指定渲染图片时所使用的字体文件，如果指定了字体文件并且被成功加载，则不会使用`fontName`配置项(此配置项正常情况下无需使用。如果无法使用系统字体，请使用此配置项指定字体文件([#14](https://github.com/Under-estimate/McMotd/issues/14))) |
+| httpServerPort | 整数(默认为0) | http服务器的运行端口号，设置为0以禁用http服务器功能 |
+| httpServerMapping | 字典(默认`{}`) | http服务器中`minecraft服务器名`到`minecraft服务器地址`的对应关系 |
+
+## HTTP API
+要开启插件的HTTP API功能，需要将配置文件中的`httpServerPort`设置为非零的可用端口，并配置`httpServerMapping`。  
+示例配置：
+> httpServerPort: 8092  
+> httpServerMapping:   
+> &nbsp;&nbsp;hypixel: hypixel.net  
+> &nbsp;&nbsp;earthmc: org.earthmc.net  
+
+以上述配置启动McMotd后，访问`http://localhost:8092/info/hypixel` 将会返回与`/mcp hypixel.net`相同的图片结果；访问`http://localhost:8092/info/earthmc` 将会返回与`/mcp org.earthmc.net`相同的图片结果。访问配置文件中未定义的服务器名（如`http://localhost:8092/info/foo` ）将不会返回有效的结果
 
 ## FAQ
 ### Q: 在QQ群中发送命令没反应
 A: 请检查是否安装了[chat-command](https://github.com/project-mirai/chat-command )插件，如果没有安装请看[这里](#如何安装 )
 
-### Q: `UninitializedPropertyAccessException:lateinit property FONT has not been initialized`
+### Q: UninitializedPropertyAccessException:lateinit property FONT has not been initialized
 A: 如果您正在使用Linux运行mirai，请检查是否安装了中文字体
+
+### Q: Could not find artifact io.ktor:xxxxx:jar:2.2.2 in https://maven.aliyun.com/repository/public
+A: 如果您正在使用[Mirai Console Loader](https://github.com/iTXTech/mirai-console-loader )，请在`/config/Console/PluginDependencies.yml`中添加
+> &nbsp;&nbsp;\- 'https://repo.maven.apache.org/maven2/'
