@@ -53,6 +53,12 @@ class GUIOutputHandler : AbstractOutputHandler() {
             addKeyListener(object : KeyAdapter() {
                 override fun keyPressed(e : KeyEvent) {
                     if(e.keyCode != KeyEvent.VK_ENTER) return
+                    if(!text.isValidURL()) {
+                        resultLabel.icon = null
+                        resultLabel.text = "Invalid URL"
+                        mainFrame.pack()
+                        return
+                    }
                     thread {
                         pingInternal(text, this@GUIOutputHandler)
                         progress.isVisible = false

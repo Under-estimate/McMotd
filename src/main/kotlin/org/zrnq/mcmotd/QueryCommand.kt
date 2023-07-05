@@ -8,6 +8,7 @@ import net.mamoe.mirai.console.command.SimpleCommand
 import net.mamoe.mirai.console.util.sendAnsiMessage
 import net.mamoe.mirai.message.data.At
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
+import org.zrnq.mclient.isValidURL
 import org.zrnq.mclient.output.APIOutputHandler
 import org.zrnq.mclient.renderBasicInfoImage
 import org.zrnq.mclient.secondToReadableTime
@@ -46,7 +47,7 @@ object QueryCommand :  SimpleCommand(McMotd, "mcp", description = "获取指定M
                 }
             }
         }
-        if(target.matches(Regex("^[a-zA-Z0-9\\-_]+\\.[a-zA-Z0-9\\-_.]+[a-zA-Z0-9\\-_](:[0-9]{1,5})?$")))
+        if(target.isValidURL())
             doPing(target)
         else
             reply("服务器地址格式错误，请指定形如: mc.example.com 或者 mc.example.com:25565 的地址")
@@ -74,7 +75,7 @@ object BindCommand : SimpleCommand(McMotd, "mcadd", description = "为当前群�
             reply("服务器名称已存在：$name")
             return
         }
-        if(!address.matches(Regex("^[a-zA-Z0-9\\-_]+\\.[a-zA-Z0-9\\-_.]+[a-zA-Z0-9\\-_](:[0-9]{1,5})?$"))) {
+        if(!address.isValidURL()) {
             reply("服务器地址格式错误，请指定形如: mc.example.com 或者 mc.example.com:25565 的地址")
             return
         }

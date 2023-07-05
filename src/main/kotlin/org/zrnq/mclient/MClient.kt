@@ -1,11 +1,11 @@
 package org.zrnq.mclient
 
+import gnu.inet.encoding.IDNA
 import org.xbill.DNS.*
 import org.zrnq.mclient.output.AbstractOutputHandler
 import java.awt.Color
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
-import java.lang.StringBuilder
 import java.net.Inet4Address
 import java.net.InetSocketAddress
 import java.net.Socket
@@ -28,15 +28,16 @@ fun pingInternal(target : String, outputHandler : AbstractOutputHandler) {
     try {
         outputHandler.beforePing()
         val option = target.split(":")
+        val encodedDomain = IDNA.toASCII(option[0])
         val addressList = mutableListOf<Pair<String, Int>>()
         val nameSet = mutableSetOf<String>()
         if(option.size > 1) {
-            addressList.add(option[0] to option[1].toInt())
+            addressList.add(encodedDomain to option[1].toInt())
         } else {
-            addressList.add(option[0] to 25565)
+            addressList.add(encodedDomain to 25565)
             for(dnsResolver in dnsResolvers) {
                 runCatching {
-                    dnsResolver.query("$addressPrefix${option[0]}.")
+                    dnsResolver.query("$addressPrefix${encodedDomain}.")
                 }.fold({
                     it.forEach { rec ->
                         check(rec is SRVRecord)

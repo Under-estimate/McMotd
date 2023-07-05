@@ -3,6 +3,7 @@ package org.zrnq.mclient
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
+import gnu.inet.encoding.IDNA
 import java.awt.Color
 import java.awt.Graphics2D
 import java.awt.Toolkit
@@ -212,3 +213,15 @@ val colorSequence = listOf(
     "#ffff55",
     "#ffffff"
 )
+
+
+fun String.isValidURL() : Boolean {
+    if(!this.matches(Regex("^[^:.]+(\\.[^:.]+)+(:[0-9]{1,5})?$"))) return false
+    val segment = this.split(":")
+    return try {
+        IDNA.toASCII(segment[0])
+        true
+    } catch (e : Exception) {
+        false
+    }
+}

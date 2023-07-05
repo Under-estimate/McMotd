@@ -7,11 +7,11 @@ plugins {
 }
 
 group = "org.zrnq"
-version = "1.1.14"
+version = "1.1.15"
 
 repositories {
-    mavenCentral()
     maven("https://maven.aliyun.com/repository/public")
+    mavenCentral()
 }
 
 
@@ -19,8 +19,9 @@ dependencies {
     implementation(kotlin("reflect"))
     implementation("com.alibaba:fastjson:1.2.83")
     implementation("dnsjava:dnsjava:3.5.0")
-    implementation("io.ktor:ktor-server-core:2.2.2")
-    implementation("io.ktor:ktor-server-netty:2.2.2")
+    implementation("io.ktor:ktor-server-core:2.3.1")
+    implementation("io.ktor:ktor-server-netty:2.3.1")
+    implementation("org.gnu.inet:libidn:1.15")
 }
 
 tasks.create("CopyToLib", Copy::class) {
