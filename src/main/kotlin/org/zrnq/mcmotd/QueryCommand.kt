@@ -115,9 +115,9 @@ object RecordCommand : SimpleCommand(McMotd, "mcrec", description = "指定需�
     @Handler
     suspend fun MemberCommandSender.handle(address : String) {
         if(PluginConfig.recordOnlinePlayer.contains(address))
-            reply("服务器[$address]已启用在线人数记录，使用\"/mcrec $address false\"来禁用此服务器的在线人数记录功能")
+            reply("服务器[$address]已启用在线人数记录，使用\"/mcrec $address false\"禁用此服务器的在线人数记录功能")
         else
-            reply("服务器[$address]未启用在线人数记录，使用\"/mcrec $address true\"来在此服务器上启用在线人数记录")
+            reply("服务器[$address]未启用在线人数记录，使用\"/mcrec $address true\"启用此服务器的在线人数记录功能")
     }
 
     @Handler
