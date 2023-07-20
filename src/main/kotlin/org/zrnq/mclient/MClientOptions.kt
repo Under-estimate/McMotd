@@ -2,9 +2,12 @@ package org.zrnq.mclient
 
 import org.zrnq.mcmotd.McMotd
 import org.zrnq.mcmotd.PluginConfig
+import java.awt.Color
 import java.awt.Font
 import java.awt.GraphicsEnvironment
+import java.awt.image.BufferedImage
 import java.io.File
+import javax.imageio.ImageIO
 
 object MClientOptions {
     lateinit var FONT : Font
@@ -12,6 +15,9 @@ object MClientOptions {
     var showTrueAddress = false
     var showServerVersion = false
     var showPlayerList = true
+    var isPureColorBackground = true
+    var backgroundColor: Color = Color.BLACK
+    var backgroundImage : BufferedImage? = null
 
     fun loadPluginConfig() {
         dnsServerList = if(PluginConfig.dnsServerList.isEmpty()) {
@@ -21,6 +27,17 @@ object MClientOptions {
         showTrueAddress = PluginConfig.showTrueAddress
         showServerVersion = PluginConfig.showServerVersion
         showPlayerList = PluginConfig.showPlayerList
+
+        if(PluginConfig.background.matches(Regex("#[0-9a-fA-F]{6}"))) {
+            backgroundColor = Color(Integer.parseInt(PluginConfig.background.drop(1), 16))
+        } else {
+            try {
+                backgroundImage = ImageIO.read(File(PluginConfig.background))
+                isPureColorBackground = false
+            } catch (e : Exception) {
+                McMotd.logger.warning("无法打开指定的背景图片: ${PluginConfig.background}")
+            }
+        }
 
         if(PluginConfig.fontPath.isNotBlank()) {
             val fontFile = File(PluginConfig.fontPath)

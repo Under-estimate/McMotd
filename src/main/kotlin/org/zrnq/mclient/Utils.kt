@@ -4,9 +4,11 @@ import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
 import gnu.inet.encoding.IDNA
+import java.awt.AlphaComposite
 import java.awt.Color
 import java.awt.Graphics2D
 import java.awt.Toolkit
+import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.util.*
 import javax.imageio.ImageIO
@@ -57,6 +59,39 @@ fun paintDescription(desc : String, g : Graphics2D, x : Int, y : Int, w : Int, h
         else jsonStringToHTML(JSON.parseObject("{\"text\":\"$desc\"}"))
     font = g.font
     paint(g.create(x, y, w, h))
+}
+
+fun createTransparentImage(width: Int, height: Int) : BufferedImage {
+    val result = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
+    val g = result.createGraphics()
+    g.composite = AlphaComposite.Clear
+    g.fillRect(0, 0, width, height)
+    g.composite = AlphaComposite.Src
+    return result
+}
+
+fun generateBackgroundImage(width : Int, height : Int) : BufferedImage {
+    val result = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
+    val g = result.createGraphics()
+    if(MClientOptions.isPureColorBackground) {
+        g.color = MClientOptions.backgroundColor
+        g.fillRect(0, 0, width, height)
+        return result
+    }
+    val backgroundImage = MClientOptions.backgroundImage!!
+    for(h in 0 until height step backgroundImage.height) {
+        for(w in 0 until width step backgroundImage.width) {
+            g.drawImage(backgroundImage, w, h, null)
+        }
+    }
+    return result
+}
+
+fun BufferedImage.addBackground() : BufferedImage {
+    val background = generateBackgroundImage(width, height)
+    val g  = background.createGraphics()
+    g.drawImage(this, 0, 0, null)
+    return background
 }
 
 fun flatTextJSON(result : JSONArray, src : JSONObject) {

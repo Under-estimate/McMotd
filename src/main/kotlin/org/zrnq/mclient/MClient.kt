@@ -73,7 +73,7 @@ fun renderBasicInfoImage(info : ServerInfo) : BufferedImage {
     val border = 20
     val width = 1000
     val height = 200
-    val result = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
+    val result = createTransparentImage(width, height)
     val g = result.createGraphics()
     g.font = MClientOptions.FONT
     g.setRenderingHints(mapOf(

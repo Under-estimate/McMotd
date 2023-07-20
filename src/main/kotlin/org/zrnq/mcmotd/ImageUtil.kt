@@ -1,6 +1,8 @@
 package org.zrnq.mcmotd
 
 import org.zrnq.mclient.MClientOptions
+import org.zrnq.mclient.addBackground
+import org.zrnq.mclient.createTransparentImage
 import org.zrnq.mcmotd.ColorScheme.toTransparent
 import java.awt.*
 import java.awt.image.BufferedImage
@@ -13,20 +15,20 @@ import kotlin.random.Random
 
 object ImageUtil {
     fun BufferedImage.appendPlayerHistory(address : String) : BufferedImage {
-        if(!PluginConfig.recordOnlinePlayer.contains(address)) return this
+        if(!PluginConfig.recordOnlinePlayer.contains(address)) return this.addBackground()
         val history = PluginData.getHistory(address)
-        val result = BufferedImage(1000, 400, BufferedImage.TYPE_INT_RGB)
+        val result = createTransparentImage(1000, 400)
         val historyImage = renderPlayerHistory(history)
 
         val g = result.createGraphics()
         g.drawImage(this, 0, 0, null)
         g.drawImage(historyImage, 0, 200, null)
-        return result
+        return result.addBackground()
     }
     fun renderPlayerHistory(history : MutableList<Pair<Long, Int>>) : BufferedImage {
         val height = 200
         val width = 1000
-        val result = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
+        val result = createTransparentImage(width, height)
         val g = result.createGraphics()
         g.color = Color.WHITE
         g.font = MClientOptions.FONT

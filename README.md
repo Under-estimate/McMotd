@@ -45,19 +45,20 @@
 ## 插件配置
 插件的配置文件位于`/config/org.zrnq.mcmotd/mcmotd.yml`  
 
-| 配置项名称 | 配置类型 | 说明 |
-| -- | -- | -- |
-| fontName | 字符串(默认`Microsoft YaHei`) | 指定渲染图片时使用的字体名称 |
-| showTrueAddress | 布尔值(默认`false`) | 设置为`true`时，服务器状态图片中显示服务器的真实地址。设置为`false`时，服务器状态图片中显示服务器的SRV地址 |
-| showServerVersion | 布尔值(默认`false`) | 设置为`true`时，服务器状态图片中显示服务器版本号 |
-| showPlayerList | 布尔值(默认`true`) | 设置为`true`时，服务器状态图片中显示当前在线的部分玩家(某些服务器可能不提供此信息，或提供非玩家信息的任意文本) |
-| dnsServerList | 字符串列表 | 指定进行SRV解析时所用的DNS服务器 |
-| recordOnlinePlayer | 字符串列表 | 已启用历史在线人数记录的服务器 |
-| recordInterval | 整数 | 记录在线人数的时间间隔(秒) |
-| recordLimit | 整数 | 最长保留的在线人数记录时间(秒) |
+| 配置项名称 | 配置类型 | 说明                                                                                                                                                     |
+| -- | -- |--------------------------------------------------------------------------------------------------------------------------------------------------------|
+| fontName | 字符串(默认`Microsoft YaHei`) | 指定渲染图片时使用的字体名称                                                                                                                                         |
+| showTrueAddress | 布尔值(默认`false`) | 设置为`true`时，服务器状态图片中显示服务器的真实地址。设置为`false`时，服务器状态图片中显示服务器的SRV地址                                                                                          |
+| showServerVersion | 布尔值(默认`false`) | 设置为`true`时，服务器状态图片中显示服务器版本号                                                                                                                            |
+| showPlayerList | 布尔值(默认`true`) | 设置为`true`时，服务器状态图片中显示当前在线的部分玩家(某些服务器可能不提供此信息，或提供非玩家信息的任意文本)                                                                                            |
+| dnsServerList | 字符串列表 | 指定进行SRV解析时所用的DNS服务器                                                                                                                                    |
+| recordOnlinePlayer | 字符串列表 | 已启用历史在线人数记录的服务器                                                                                                                                        |
+| recordInterval | 整数 | 记录在线人数的时间间隔(秒)                                                                                                                                         |
+| recordLimit | 整数 | 最长保留的在线人数记录时间(秒)                                                                                                                                       |
 | fontPath | 字符串(默认为空) | 指定渲染图片时所使用的字体文件，如果指定了字体文件并且被成功加载，则不会使用`fontName`配置项(此配置项正常情况下无需使用。如果无法使用系统字体，请使用此配置项指定字体文件([#14](https://github.com/Under-estimate/McMotd/issues/14))) |
-| httpServerPort | 整数(默认为0) | http服务器的运行端口号，设置为0以禁用http服务器功能 |
-| httpServerMapping | 字典(默认`{}`) | http服务器中`minecraft服务器名`到`minecraft服务器地址`的对应关系 |
+| background | 字符串(默认为`#000000`) | 指定渲染图片的背景，若以`#`开头，则指定的是RGB格式的纯色背景，否则为被解析为指向背景图片的路径                                                                                                     |
+| httpServerPort | 整数(默认为0) | http服务器的运行端口号，设置为0以禁用http服务器功能                                                                                                                         |
+| httpServerMapping | 字典(默认`{}`) | http服务器中`minecraft服务器名`到`minecraft服务器地址`的对应关系                                                                                                          |
 
 ## HTTP API
 要开启插件的HTTP API功能，需要将配置文件中的`httpServerPort`设置为非零的可用端口，并配置`httpServerMapping`。  

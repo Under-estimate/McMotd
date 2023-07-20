@@ -111,7 +111,7 @@ class GUIOutputHandler : AbstractOutputHandler() {
     }
 
     override fun onSuccess(info : ServerInfo) {
-        resultLabel.icon = ImageIcon(renderBasicInfoImage(info))
+        resultLabel.icon = ImageIcon(renderBasicInfoImage(info).addBackground())
     }
 
     override fun afterPing() {
