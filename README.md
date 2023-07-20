@@ -56,7 +56,7 @@
 | recordInterval | 整数 | 记录在线人数的时间间隔(秒)                                                                                                                                         |
 | recordLimit | 整数 | 最长保留的在线人数记录时间(秒)                                                                                                                                       |
 | fontPath | 字符串(默认为空) | 指定渲染图片时所使用的字体文件，如果指定了字体文件并且被成功加载，则不会使用`fontName`配置项(此配置项正常情况下无需使用。如果无法使用系统字体，请使用此配置项指定字体文件([#14](https://github.com/Under-estimate/McMotd/issues/14))) |
-| background | 字符串(默认为`#000000`) | 指定渲染图片的背景，若以`#`开头，则指定的是RGB格式的纯色背景，否则为被解析为指向背景图片的路径                                                                                                     |
+| background | 字符串(默认为`#000000`) | 指定渲染图片的背景，若以`#`开头，则指定的是RGB格式的纯色背景，否则会被解析为指向背景图片的路径                                                                                                     |
 | httpServerPort | 整数(默认为0) | http服务器的运行端口号，设置为0以禁用http服务器功能                                                                                                                         |
 | httpServerMapping | 字典(默认`{}`) | http服务器中`minecraft服务器名`到`minecraft服务器地址`的对应关系                                                                                                          |
 
