@@ -7,7 +7,8 @@ plugins {
 }
 
 group = "org.zrnq"
-version = "1.1.16"
+version = "1.1.17"
+val ktor_version = "2.3.1"
 
 repositories {
     maven("https://maven.aliyun.com/repository/public")
@@ -19,8 +20,8 @@ dependencies {
     implementation(kotlin("reflect"))
     implementation("com.alibaba:fastjson:1.2.83")
     implementation("dnsjava:dnsjava:3.5.0")
-    implementation("io.ktor:ktor-server-core:2.3.1")
-    implementation("io.ktor:ktor-server-netty:2.3.1")
+    implementation("io.ktor:ktor-server-core:$ktor_version")
+    implementation("io.ktor:ktor-server-netty:$ktor_version")
     implementation("org.gnu.inet:libidn:1.15")
 }
 

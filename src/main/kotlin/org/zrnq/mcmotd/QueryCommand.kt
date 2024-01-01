@@ -134,6 +134,22 @@ object RecordCommand : SimpleCommand(McMotd, "mcrec", description = "指定需�
     }
 }
 
+@Suppress("unused")
+object HttpServerCommand : SimpleCommand(McMotd, "mcapi", description = "获取Http API访问计数信息") {
+    @Handler
+    suspend fun CommandSender.handle() {
+        if(PluginConfig.httpServerPort == 0) {
+            reply("Http API未开启")
+            return
+        }
+        if(PluginConfig.httpServerAccessRecordRefresh == 0) {
+            reply("Http API访问计数功能未开启")
+            return
+        }
+        reply(RateLimiter.getRecordData())
+    }
+}
+
 private suspend fun CommandSender.reply(message : String) {
     if(user == null) sendAnsiMessage { lightPurple().append(message) }
     else sendMessage(At(user!!.id) + message)

@@ -17,4 +17,7 @@ object PluginConfig : AutoSavePluginConfig("mcmotd") {
 
     val httpServerPort by value(0)
     val httpServerMapping by value(mutableMapOf<String, String>())
+    val httpServerParallelRequest by value(32)
+    val httpServerRequestCoolDown by value(3000)
+    val httpServerAccessRecordRefresh by value(0)
 }

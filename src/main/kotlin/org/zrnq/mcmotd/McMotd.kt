@@ -1,13 +1,9 @@
 package org.zrnq.mcmotd
 
 import com.alibaba.fastjson.parser.ParserConfig
-import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import io.ktor.util.pipeline.*
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.unregister
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
@@ -17,13 +13,7 @@ import net.mamoe.mirai.utils.info
 import org.zrnq.mclient.MClientOptions
 import org.zrnq.mclient.output.APIOutputHandler
 import org.zrnq.mclient.pingInternal
-import org.zrnq.mclient.renderBasicInfoImage
-import org.zrnq.mcmotd.ImageUtil.appendPlayerHistory
-import org.zrnq.mcmotd.ImageUtil.drawErrorMessage
-import java.awt.image.BufferedImage
-import java.io.ByteArrayOutputStream
 import java.util.*
-import javax.imageio.ImageIO
 
 lateinit var miraiLogger : MiraiLogger
 
@@ -47,6 +37,7 @@ object McMotd : KotlinPlugin(
         BindCommand.register()
         DelCommand.register()
         RecordCommand.register()
+        HttpServerCommand.register()
         MClientOptions.loadPluginConfig()
         startRecord()
         configureHttpServer()
@@ -58,6 +49,7 @@ object McMotd : KotlinPlugin(
         BindCommand.unregister()
         DelCommand.unregister()
         RecordCommand.unregister()
+        HttpServerCommand.unregister()
         stopRecord()
         stopHttpServer()
     }
@@ -94,41 +86,5 @@ object McMotd : KotlinPlugin(
     private fun stopHttpServer() {
         if(httpServer != null)
             httpServer!!.stop()
-    }
-}
-
-fun Application.mcmotdHttpServer() {
-    routing {
-        configureRouting()
-    }
-}
-
-suspend fun PipelineContext<*, ApplicationCall>.respondImage(image : BufferedImage)
-    = call.respondBytes(ContentType.Image.PNG, HttpStatusCode.OK) {
-    ByteArrayOutputStream().also { stream ->
-        ImageIO.write(image, "png", stream)
-    }.toByteArray()
-}
-
-suspend fun PipelineContext<*, ApplicationCall>.respondErrorImage(msg : String)
-    = respondImage(BufferedImage(1000, 200, BufferedImage.TYPE_INT_RGB).also {
-        it.createGraphics().drawErrorMessage(msg, 0, 0, 1000, 200)
-    })
-fun Route.configureRouting() {
-    route("/info") {
-        get("{server?}") {
-            val servername = call.parameters["server"] ?: return@get respondErrorImage("未指定服务器名")
-            if(!PluginConfig.httpServerMapping.containsKey(servername))
-                return@get respondErrorImage("指定的服务器名没有在配置文件中定义")
-            var error : String? = null
-            var image : BufferedImage? = null
-            val target = PluginConfig.httpServerMapping[servername]!!
-            pingInternal(target, APIOutputHandler(McMotd.logger, { error = it }, { image = renderBasicInfoImage(it).appendPlayerHistory(target) }))
-            if(image == null) {
-                McMotd.logger.warning("Http请求失败:$error")
-                return@get respondErrorImage("服务器信息获取失败")
-            }
-            return@get respondImage(image!!)
-        }
     }
 }
