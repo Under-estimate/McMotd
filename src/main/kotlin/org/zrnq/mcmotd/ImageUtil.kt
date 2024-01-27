@@ -15,14 +15,15 @@ import kotlin.random.Random
 
 object ImageUtil {
     fun BufferedImage.appendPlayerHistory(address : String) : BufferedImage {
+        val playerHistoryHeight = 200
         if(!PluginConfig.recordOnlinePlayer.contains(address)) return this.addBackground()
         val history = PluginData.getHistory(address)
-        val result = createTransparentImage(1000, 400)
+        val result = createTransparentImage(1000, height + playerHistoryHeight)
         val historyImage = renderPlayerHistory(history)
 
         val g = result.createGraphics()
         g.drawImage(this, 0, 0, null)
-        g.drawImage(historyImage, 0, 200, null)
+        g.drawImage(historyImage, 0, height, null)
         return result.addBackground()
     }
     fun renderPlayerHistory(history : MutableList<Pair<Long, Int>>) : BufferedImage {

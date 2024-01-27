@@ -3,13 +3,9 @@ package org.zrnq.mclient
 import gnu.inet.encoding.IDNA
 import org.xbill.DNS.*
 import org.zrnq.mclient.output.AbstractOutputHandler
-import java.awt.Color
-import java.awt.RenderingHints
-import java.awt.image.BufferedImage
 import java.net.Inet4Address
 import java.net.InetSocketAddress
 import java.net.Socket
-import javax.swing.SwingConstants
 
 const val addressPrefix = "_minecraft._tcp."
 private val dnsResolvers by lazy {
@@ -69,34 +65,6 @@ fun pingInternal(target : String, outputHandler : AbstractOutputHandler) {
     }
 }
 
-fun renderBasicInfoImage(info : ServerInfo) : BufferedImage {
-    val border = 20
-    val width = 1000
-    val height = 200
-    val result = createTransparentImage(width, height)
-    val g = result.createGraphics()
-    g.font = MClientOptions.FONT
-    g.setRenderingHints(mapOf(
-        RenderingHints.KEY_INTERPOLATION to RenderingHints.VALUE_INTERPOLATION_BICUBIC,
-        RenderingHints.KEY_TEXT_ANTIALIASING to RenderingHints.VALUE_TEXT_ANTIALIAS_ON
-    ))
-    if(info.favicon != null)
-        paintBase64Image(info.favicon, g, border, border, height - 2 * border, height - 2 * border)
-    else
-        paintString("NO IMAGE", g, border, (height - g.fontMetrics.height) / 2 , height - 2 * border, height - 2 * border) {
-            foreground = Color.MAGENTA
-            horizontalAlignment = SwingConstants.CENTER
-        }
-    g.drawRect(border, border, height - 2 * border, height - 2 * border)
-    paintDescription(info.description, g, height, border, width - border - height, height / 2 - border)
-
-    val sb = StringBuilder("访问地址: ${info.serverAddress}      Ping: ${info.latency}")
-    if(MClientOptions.showServerVersion) sb.append("\n${info.version.limitLength(50)}")
-    sb.append("\n${info.playerDescription}")
-    paintDescription(sb.toString(), g, height, height / 2, width - border - height, height / 2 - border)
-    return result
-}
-
 fun getInfo(address : String, port : Int = 25565) : ServerInfo {
     val socket = Socket()
     socket.soTimeout = 3000
@@ -122,9 +90,9 @@ fun getInfo(address : String, port : Int = 25565) : ServerInfo {
         output.flush()
         // https://wiki.vg/Protocol#Ping : The returned value from server could be any number
         Packet(input, PLong::class)
-        (System.currentTimeMillis() - time).toString() + "ms"
+        (System.currentTimeMillis() - time).toInt()
     } catch (e : Exception) {
-        "Failed"
+        -1
     }
 
     socket.close()

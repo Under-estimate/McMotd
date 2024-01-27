@@ -4,16 +4,13 @@ import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
 import gnu.inet.encoding.IDNA
-import java.awt.AlphaComposite
-import java.awt.Color
-import java.awt.Graphics2D
-import java.awt.Toolkit
+import java.awt.*
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.util.*
 import javax.imageio.ImageIO
+import javax.swing.JEditorPane
 import javax.swing.JFrame
-import javax.swing.JLabel
 
 fun Int.secondToReadableTime() : String {
     return when {
@@ -36,29 +33,63 @@ inline fun <reified E> Exception.matches(msg : String? = null) = this::class == 
 
 fun String.limitLength(max : Int) = if (length > max) this.substring(0, max) + "..." else this
 
+fun renderBasicInfoImage(info: ServerInfo) : BufferedImage {
+    val margin = 20
+    val width = 1000
+    val iconSize = 160
+    val iconCenter = 100
+    val textWidth = width - iconSize - 3 * margin
+    val textX = iconSize + 2 * margin
+
+    val textContent = info.toHTMLString()
+    // Creating a new JEditorPane every time since swing objects are not thread safe
+    val textRenderer = JEditorPane("text/html", textContent)
+    textRenderer.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, true)
+    textRenderer.text = textContent
+    textRenderer.background = Color(0,0,0,0)
+    textRenderer.font = MClientOptions.FONT
+    textRenderer.setSize(textWidth, Short.MAX_VALUE.toInt())
+
+    val textSize = textRenderer.preferredSize
+    val imageHeight = (textSize.height + 2 * margin).coerceAtLeast(iconSize + 2 * margin)
+    val result = createTransparentImage(width, imageHeight)
+
+    val g = result.createGraphics()
+    g.font = MClientOptions.FONT
+    g.setRenderingHints(mapOf(
+        RenderingHints.KEY_INTERPOLATION to RenderingHints.VALUE_INTERPOLATION_BICUBIC,
+        RenderingHints.KEY_TEXT_ANTIALIASING to RenderingHints.VALUE_TEXT_ANTIALIAS_ON
+    ))
+    if(info.favicon != null)
+        paintBase64Image(info.favicon, g, margin, margin, iconSize, iconSize)
+    else
+        paintStringWithBackground("NO IMAGE", g, iconCenter, iconCenter, Color.WHITE, Color(0xaa0000), 15, 10)
+    g.color = Color.WHITE
+    g.drawRect(margin, margin, iconSize, iconSize)
+
+    textRenderer.paint(g.create(textX, margin, textWidth, textSize.height))
+    return result
+}
+
+fun paintStringWithBackground(str : String, g : Graphics2D, x : Int, y : Int, fg : Color, bg : Color, horizontalPadding : Int, verticalPadding : Int) {
+    val fontMetrics = g.fontMetrics
+    val textWidth = fontMetrics.stringWidth(str)
+    val textX = x - textWidth / 2
+    val textY = y + fontMetrics.ascent - fontMetrics.height / 2
+    val rectX = textX - horizontalPadding
+    val rectY = y - fontMetrics.height / 2 - verticalPadding
+    g.color = bg
+    g.fillRect(rectX, rectY, textWidth + 2 * horizontalPadding, fontMetrics.height + 2 * verticalPadding)
+    g.color = fg
+    g.drawString(str, textX, textY)
+}
+
 fun paintBase64Image(img : String, g : Graphics2D, x : Int, y : Int, w : Int, h : Int) {
     val imgDescriptor = img.split(",").let {
         it[0].substring(11, it[0].length - 7) to it[1].replace("\n", "")
     }
     val image = ImageIO.read(ByteArrayInputStream(Base64.getDecoder().decode(imgDescriptor.second)))
     g.drawImage(image, x, y, w, h, null)
-}
-
-fun paintString(str : String, g : Graphics2D, x : Int, y : Int, w : Int, h : Int, block : JLabel.() -> Unit = {}) = JLabel().apply {
-    setSize(w, h)
-    text = "<html><span style='color:white;white-space:nowrap;text-overflow:ellipsis;'>${str.replace(" ", "&nbsp;").replace("\n", "<br />")}</span></html>"
-    foreground = Color.WHITE
-    font = g.font
-    block()
-    paint(g.create(x, y, w, h))
-}
-
-fun paintDescription(desc : String, g : Graphics2D, x : Int, y : Int, w : Int, h : Int) = JLabel().apply {
-    setSize(w, h)
-    text = if(desc.startsWith("{")) jsonStringToHTML(JSON.parseObject(desc))
-        else jsonStringToHTML(JSON.parseObject("{\"text\":\"$desc\"}"))
-    font = g.font
-    paint(g.create(x, y, w, h))
 }
 
 fun createTransparentImage(width: Int, height: Int) : BufferedImage {
@@ -94,21 +125,23 @@ fun BufferedImage.addBackground() : BufferedImage {
     return background
 }
 
-fun flatTextJSON(result : JSONArray, src : JSONObject) {
-    val currentIndex = result.size
-    val paragraph = JSONObject()
-    for(key in src.keys) {
-        if(key == "extra") {
-            when (val extra = src[key]) {
-                is JSONArray -> for(i in extra.indices) flatTextJSON(result, extra.getJSONObject(i))
-                is JSONObject -> flatTextJSON(result, extra)
-                else -> throw IllegalArgumentException("Description syntax error")
+fun flatJsonEntity(result: JSONArray, entity: Any) {
+    when(entity) {
+        is String -> result.add(JSONObject().apply { put("text", entity) })
+        is JSONObject -> {
+            val flatObj = JSONObject()
+            val currentIndex = result.size
+            for(key in entity.keys) {
+                if(key == "extra") flatJsonEntity(result, entity[key]!!)
+                flatObj[key] = entity[key]
             }
-        } else {
-            paragraph[key] = src[key]
+            result.add(currentIndex, flatObj)
+        }
+        is JSONArray -> {
+            for(element in entity) flatJsonEntity(result, element)
         }
     }
-    result.add(currentIndex, paragraph)
+
 }
 
 private const val RAW = 8
@@ -121,12 +154,8 @@ private const val STRIKE = 4
 
 fun jsonStringToHTML(json : JSON) : String{
     val line = JSONArray()
-    when (json) {
-        is JSONObject -> flatTextJSON(line, json)
-        is JSONArray -> for(i in json.indices) flatTextJSON(line, json.getJSONObject(i))
-        else -> throw IllegalArgumentException("Description syntax error")
-    }
-    val builder = StringBuilder("<html>")
+    flatJsonEntity(line, json)
+    val builder = StringBuilder()
 
     val attributes = Array<Any?>(RAW * 2) { null }
 
@@ -200,7 +229,6 @@ fun jsonStringToHTML(json : JSON) : String{
         }
         builder.append(spanEnd)
     }
-    builder.append("</html>")
     return builder.toString()
 }
 
