@@ -3,7 +3,6 @@ package org.zrnq.mclient
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
-import gnu.inet.encoding.IDNA
 import java.awt.*
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
@@ -277,14 +276,66 @@ val colorSequence = listOf(
     "#ffffff"
 )
 
+object AddressRegexes {
+    val ipv4addr = Regex("^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$")
+    val ipv6addr = Regex(
+        "^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|" +
+            "([0-9a-fA-F]{1,4}:){1,7}:|" +
+            "([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|" +
+            "([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|" +
+            "([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|" +
+            "([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|" +
+            "([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|" +
+            "[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|" +
+            ":((:[0-9a-fA-F]{1,4}){1,7}|:)|" +
+            "fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]+|" +
+            "::(ffff(:0{1,4})?:)?((25[0-5]|(2[0-4]|1?[0-9])?[0-9])\\.){3}(25[0-5]|(2[0-4]|1?[0-9])?[0-9])|" +
+            "([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1?[0-9])?[0-9])\\.){3}(25[0-5]|(2[0-4]|1?[0-9])?[0-9]))$")
+    val addrWithPort = Regex("^[^:]*?:((6553[0-5])|(655[0-2][0-9])|(65[0-4][0-9]{2})|(6[0-4][0-9]{3})|([1-5][0-9]{4})|([0-5]{0,5})|([0-9]{1,4}))$")
+    val ipv6addrWithPort = Regex("^\\[[^\\[\\]]*?]:((6553[0-5])|(655[0-2][0-9])|(65[0-4][0-9]{2})|(6[0-4][0-9]{3})|([1-5][0-9]{4})|([0-5]{0,5})|([0-9]{1,4}))$")
+    val genericHostname = Regex("^(localhost)|([^:.]+(\\.[^:.]+)+)$")
+}
 
-fun String.isValidURL() : Boolean {
-    if(!this.matches(Regex("^[^:.]+(\\.[^:.]+)+(:[0-9]{1,5})?$"))) return false
-    val segment = this.split(":")
-    return try {
-        IDNA.toASCII(segment[0])
-        true
-    } catch (e : Exception) {
-        false
+fun String.stripPort() : Pair<String, Int> {
+    val parts = split(":")
+    return parts[0] to parts[1].toInt()
+}
+
+fun String.stripIPv6Port() : Pair<String, Int> {
+    val parts = split("]:")
+    return parts[0].substring(1) to parts[1].toInt()
+}
+
+private val addressCache = Collections.synchronizedMap(WeakHashMap<String, ServerAddress>())
+
+fun String.parseAddressCached(): ServerAddress? {
+    var result = addressCache[this]
+    if(result == null) {
+        result = parseAddress()
+        if(result != null) addressCache[this] = result
     }
+    return result
+}
+
+fun String.parseAddress(): ServerAddress? {
+    if(matches(AddressRegexes.addrWithPort)) {
+        val withoutPort = stripPort()
+        if(withoutPort.first.matches(AddressRegexes.ipv4addr))
+            return IPServerAddress(this, withoutPort.first, withoutPort.second)
+        if(withoutPort.first.matches(AddressRegexes.genericHostname))
+            return HostnameServerAddress(this, withoutPort.first, false, withoutPort.second)
+        return null
+    }
+    if(matches(AddressRegexes.ipv4addr))
+        return IPServerAddress(this, this)
+    if(matches(AddressRegexes.genericHostname))
+        return HostnameServerAddress(this, this)
+    if(matches(AddressRegexes.ipv6addrWithPort)) {
+        val withoutPort = stripIPv6Port()
+        if(withoutPort.first.matches(AddressRegexes.ipv6addr))
+            return IPServerAddress(this, withoutPort.first, withoutPort.second)
+    }
+    if(matches(AddressRegexes.ipv6addr))
+        return IPServerAddress(this, this)
+    return null
 }

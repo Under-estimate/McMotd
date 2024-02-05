@@ -9,6 +9,7 @@ import io.ktor.util.pipeline.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.zrnq.mclient.output.APIOutputHandler
+import org.zrnq.mclient.parseAddressCached
 import org.zrnq.mclient.pingInternal
 import org.zrnq.mclient.renderBasicInfoImage
 import org.zrnq.mcmotd.ImageUtil.appendPlayerHistory
@@ -107,8 +108,13 @@ fun Route.configureRouting() {
                 ?: return@get respondErrorImage("指定的服务器名没有在配置文件中定义")
             var error : String? = null
             var image : BufferedImage? = null
+            val address = target.parseAddressCached()
+            if(address == null) {
+                McMotd.logger.warning("Http服务器中配置的服务器地址无效:$target")
+                return@get
+            }
             withContext(Dispatchers.IO) {
-                pingInternal(target, APIOutputHandler(McMotd.logger, { error = it }, { image = renderBasicInfoImage(it).appendPlayerHistory(target) }))
+                pingInternal(address, APIOutputHandler(McMotd.logger, { error = it }, { image = renderBasicInfoImage(it).appendPlayerHistory(target) }))
             }
             if(image == null) {
                 McMotd.logger.warning("Http请求失败:$error")

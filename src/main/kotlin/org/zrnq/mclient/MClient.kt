@@ -1,56 +1,18 @@
 package org.zrnq.mclient
 
-import gnu.inet.encoding.IDNA
-import org.xbill.DNS.*
 import org.zrnq.mclient.output.AbstractOutputHandler
-import java.net.Inet4Address
 import java.net.InetSocketAddress
 import java.net.Socket
 
-const val addressPrefix = "_minecraft._tcp."
-private val dnsResolvers by lazy {
-    MClientOptions.dnsServerList.map {
-        SimpleResolver(Inet4Address.getByName(it))
-        .also { resolver -> resolver.timeout = java.time.Duration.ofSeconds(2) }
-    }
-}
 
-private fun Resolver.query(name : String) : List<Record> {
-    return send(Message.newQuery(Record.newRecord(Name.fromString(name), Type.SRV, DClass.IN)))
-        .getSection(Section.ANSWER)
-}
-
-fun pingInternal(target : String, outputHandler : AbstractOutputHandler) {
+fun pingInternal(target : ServerAddress, outputHandler : AbstractOutputHandler) {
     try {
         outputHandler.beforePing()
-        val option = target.split(":")
-        val encodedDomain = IDNA.toASCII(option[0])
-        val addressList = mutableListOf<Pair<String, Int>>()
-        val nameSet = mutableSetOf<String>()
-        if(option.size > 1) {
-            addressList.add(encodedDomain to option[1].toInt())
-        } else {
-            addressList.add(encodedDomain to 25565)
-            for(dnsResolver in dnsResolvers) {
-                runCatching {
-                    dnsResolver.query("$addressPrefix${encodedDomain}.")
-                }.fold({
-                    it.forEach { rec ->
-                        check(rec is SRVRecord)
-                        rec.target.toString(true)
-                            .takeIf { addr -> nameSet.add(addr) }
-                            ?.also { addr -> addressList.add(addr to rec.port) }
-                    }
-                }, {
-                    System.err.println("SRV解析出错，请检查DNS服务器配置项[${dnsResolver.address}]：${it.message}")
-                })
-            }
-        }
-        for(it in addressList) {
+        for(it in target.addressList()) {
             try {
                 outputHandler.onAttemptAddress("${it.first}:${it.second}")
                 val info = getInfo(it.first, it.second)
-                    .let { if(!MClientOptions.showTrueAddress) it.setAddress(target) else it }
+                    .let { if(!MClientOptions.showTrueAddress) it.setAddress(target.originalAddress) else it }
                 outputHandler.onSuccess(info)
                 outputHandler.afterPing()
                 return

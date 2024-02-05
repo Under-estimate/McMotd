@@ -10,9 +10,8 @@ import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
 import net.mamoe.mirai.utils.MiraiLogger
 import net.mamoe.mirai.utils.info
-import org.zrnq.mclient.MClientOptions
+import org.zrnq.mclient.*
 import org.zrnq.mclient.output.APIOutputHandler
-import org.zrnq.mclient.pingInternal
 import java.util.*
 
 lateinit var miraiLogger : MiraiLogger
@@ -21,7 +20,7 @@ object McMotd : KotlinPlugin(
     JvmPluginDescription(
         id = "org.zrnq.mcmotd",
         name = "Minecraft MOTD Fetcher",
-        version = "1.1.16",
+        version = "1.1.19",
     ) {
         author("ZRnQ")
         info("""以图片的形式获取指定Minecraft服务器的基本信息""")
@@ -61,11 +60,15 @@ object McMotd : KotlinPlugin(
         timer.schedule(object : TimerTask() {
             override fun run() {
                 PluginConfig.recordOnlinePlayer.forEach { address ->
-                    pingInternal(address, APIOutputHandler(miraiLogger,
-                        { miraiLogger.warning("Periodic check failed for $address: $it") },
-                        { if(it.onlinePlayerCount == null) miraiLogger.warning("Periodic check: target server ($address) does not supply online player count")
-                        else PluginData.recordHistory(address, it.onlinePlayerCount) })
-                    )
+                    val resolvedAddress = address.parseAddressCached()
+                    if(resolvedAddress == null) {
+                        miraiLogger.warning("在线人数记录配置的服务器地址无效: $address")
+                        return@forEach
+                    }
+                    pingInternal(resolvedAddress, APIOutputHandler(miraiLogger,
+                        { miraiLogger.warning("在线人数记录失败 $address: $it") },
+                        { if(it.onlinePlayerCount == null) miraiLogger.warning("在线人数记录: ($address) 没有提供在线人数数据")
+                        else PluginData.recordHistory(address, it.onlinePlayerCount) }))
                 }
             }
         }, PluginConfig.recordInterval.toLong() * 1000, PluginConfig.recordInterval.toLong() * 1000)
