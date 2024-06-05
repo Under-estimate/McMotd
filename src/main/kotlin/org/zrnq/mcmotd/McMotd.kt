@@ -68,7 +68,7 @@ object McMotd : KotlinPlugin(
                     pingInternal(resolvedAddress, APIOutputHandler(miraiLogger,
                         { miraiLogger.warning("在线人数记录失败 $address: $it") },
                         { if(it.onlinePlayerCount == null) miraiLogger.warning("在线人数记录: ($address) 没有提供在线人数数据")
-                        else PluginData.recordHistory(address, it.onlinePlayerCount) }))
+                        else PluginData.recordHistory(address, it.onlinePlayerCount!!) }))
                 }
             }
         }, PluginConfig.recordInterval.toLong() * 1000, PluginConfig.recordInterval.toLong() * 1000)

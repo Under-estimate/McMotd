@@ -12,7 +12,7 @@ import javax.imageio.ImageIO
 object MClientOptions {
     lateinit var FONT : Font
     var dnsServerList = listOf("223.5.5.5", "8.8.8.8")
-    var showTrueAddress = false
+    var showTrueAddress = true
     var showServerVersion = false
     var showPlayerList = true
     var isPureColorBackground = true

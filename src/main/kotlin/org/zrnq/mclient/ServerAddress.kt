@@ -19,15 +19,16 @@ private fun Resolver.query(name : String) : List<Record> {
         .getSection(Section.ANSWER)
 }
 
-abstract class ServerAddress(val originalAddress: String, val port: Int) {
+abstract class ServerAddress(val originalAddress: String, val port: Int, val queryPort: Int) {
     abstract fun addressList(): List<Pair<String, Int>>
 }
 
 class HostnameServerAddress(originalAddress: String,
                             private val hostname : String,
                             private var shouldResolve :Boolean = true,
-                            port : Int = DefaultPort)
-    : ServerAddress(originalAddress, port) {
+                            port : Int = DefaultPort,
+                            queryPort : Int = -1)
+    : ServerAddress(originalAddress, port, queryPort) {
     init {
         if(hostname == "localhost") shouldResolve = false
     }
@@ -61,7 +62,8 @@ class HostnameServerAddress(originalAddress: String,
 
 class IPServerAddress(originalAddress: String,
                       private val address : String,
-                      port : Int = DefaultPort)
-    : ServerAddress(originalAddress, port) {
+                      port : Int = DefaultPort,
+                      queryPort : Int = -1)
+    : ServerAddress(originalAddress, port, queryPort) {
     override fun addressList() = listOf(address to port)
 }

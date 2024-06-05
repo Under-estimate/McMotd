@@ -12,11 +12,11 @@ class ServerInfo(response : String, private val latency : Int) {
     /**服务器版本号*/
     private val version : String
     /**在线人数*/
-    val onlinePlayerCount : Int?
+    var onlinePlayerCount : Int?
     /**服务器宣称的最大人数*/
-    private val maxPlayerCount : Int?
+    private var maxPlayerCount : Int?
     /**服务器提供的部分在线玩家列表*/
-    private val samplePlayerList : String?
+    private var samplePlayerList : String?
     /**服务器的显示地址*/
     private lateinit var serverAddress : String
 
@@ -85,11 +85,28 @@ class ServerInfo(response : String, private val latency : Int) {
         return sb.toString()
     }
 
-    companion object {
-        fun JSONArray?.toPlayerListString(limit: Int) : String {
-            return if(this == null) "没有信息"
-            else if(isEmpty()) "空"
-            else joinToString(", ", limit = limit) { (it as JSONObject).getString("name") }
+    fun merge(queryInfo: QueryServerInfo) {
+        if(onlinePlayerCount == null) {
+            onlinePlayerCount = queryInfo.serverProperties["numplayers"]?.toInt()
+        }
+        if(maxPlayerCount == null) {
+            maxPlayerCount = queryInfo.serverProperties["maxplayers"]?.toInt()
+        }
+        if(samplePlayerList == null || samplePlayerList == emptyPlayerListMsg) {
+            samplePlayerList = if(queryInfo.playerList.isEmpty()) emptyPlayerListMsg
+            else queryInfo.playerList.joinToString(", ", limit = 10)
         }
     }
+
+    companion object {
+        fun JSONArray?.toPlayerListString(limit: Int) : String? {
+            return if(this == null) null
+            else if(isEmpty()) emptyPlayerListMsg
+            else joinToString(", ", limit = limit) { (it as JSONObject).getString("name") }
+        }
+
+        const val emptyPlayerListMsg = "空"
+    }
 }
+
+class QueryServerInfo(val serverProperties: Map<String, String>, val playerList: List<String>)

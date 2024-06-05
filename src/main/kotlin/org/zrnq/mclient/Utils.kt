@@ -291,19 +291,9 @@ object AddressRegexes {
             "fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]+|" +
             "::(ffff(:0{1,4})?:)?((25[0-5]|(2[0-4]|1?[0-9])?[0-9])\\.){3}(25[0-5]|(2[0-4]|1?[0-9])?[0-9])|" +
             "([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1?[0-9])?[0-9])\\.){3}(25[0-5]|(2[0-4]|1?[0-9])?[0-9]))$")
-    val addrWithPort = Regex("^[^:]*?:((6553[0-5])|(655[0-2][0-9])|(65[0-4][0-9]{2})|(6[0-4][0-9]{3})|([1-5][0-9]{4})|([0-5]{0,5})|([0-9]{1,4}))$")
-    val ipv6addrWithPort = Regex("^\\[[^\\[\\]]*?]:((6553[0-5])|(655[0-2][0-9])|(65[0-4][0-9]{2})|(6[0-4][0-9]{3})|([1-5][0-9]{4})|([0-5]{0,5})|([0-9]{1,4}))$")
+    val addrWithPort = Regex("^[^:]*?(:((6553[0-5])|(655[0-2][0-9])|(65[0-4][0-9]{2})|(6[0-4][0-9]{3})|([1-5][0-9]{4})|([0-5]{0,5})|([0-9]{1,4}))){1,2}$")
+    val ipv6addrWithPort = Regex("^\\[[^\\[\\]]*?](:((6553[0-5])|(655[0-2][0-9])|(65[0-4][0-9]{2})|(6[0-4][0-9]{3})|([1-5][0-9]{4})|([0-5]{0,5})|([0-9]{1,4}))){1,2}$")
     val genericHostname = Regex("^(localhost)|([^:.]+(\\.[^:.]+)+)$")
-}
-
-fun String.stripPort() : Pair<String, Int> {
-    val parts = split(":")
-    return parts[0] to parts[1].toInt()
-}
-
-fun String.stripIPv6Port() : Pair<String, Int> {
-    val parts = split("]:")
-    return parts[0].substring(1) to parts[1].toInt()
 }
 
 private val addressCache = Collections.synchronizedMap(WeakHashMap<String, ServerAddress>())
@@ -319,11 +309,15 @@ fun String.parseAddressCached(): ServerAddress? {
 
 fun String.parseAddress(): ServerAddress? {
     if(matches(AddressRegexes.addrWithPort)) {
-        val withoutPort = stripPort()
-        if(withoutPort.first.matches(AddressRegexes.ipv4addr))
-            return IPServerAddress(this, withoutPort.first, withoutPort.second)
-        if(withoutPort.first.matches(AddressRegexes.genericHostname))
-            return HostnameServerAddress(this, withoutPort.first, false, withoutPort.second)
+        val segments = split(':')
+        val serverAddress = segments[0]
+        val serverPort = segments[1].toInt()
+        val queryPort = if(segments.size >= 3) segments[2].toInt() else -1
+        val serverOriginalAddress = if(segments.size >= 3) "$serverAddress:$serverPort" else this
+        if(serverAddress.matches(AddressRegexes.ipv4addr))
+            return IPServerAddress(serverOriginalAddress, serverAddress, serverPort, queryPort)
+        if(serverAddress.matches(AddressRegexes.genericHostname))
+            return HostnameServerAddress(serverOriginalAddress, serverAddress, false, serverPort, queryPort)
         return null
     }
     if(matches(AddressRegexes.ipv4addr))
@@ -331,9 +325,14 @@ fun String.parseAddress(): ServerAddress? {
     if(matches(AddressRegexes.genericHostname))
         return HostnameServerAddress(this, this)
     if(matches(AddressRegexes.ipv6addrWithPort)) {
-        val withoutPort = stripIPv6Port()
-        if(withoutPort.first.matches(AddressRegexes.ipv6addr))
-            return IPServerAddress(this, withoutPort.first, withoutPort.second)
+        val segments = split("]:")
+        val serverAddress = segments[0].substring(1)
+        val portSegments = segments[1].split(':')
+        val serverPort = portSegments[0].toInt()
+        val queryPort = if(portSegments.size >= 2) segments[1].toInt() else -1
+        val serverOriginalAddress = if(portSegments.size >= 2) "[$serverAddress]:$serverPort" else this
+        if(serverAddress.matches(AddressRegexes.ipv6addr))
+            return IPServerAddress(serverOriginalAddress, serverAddress, serverPort, queryPort)
     }
     if(matches(AddressRegexes.ipv6addr))
         return IPServerAddress(this, this)
