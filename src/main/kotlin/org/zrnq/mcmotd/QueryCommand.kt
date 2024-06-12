@@ -1,6 +1,7 @@
 package org.zrnq.mcmotd
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import net.mamoe.mirai.console.command.CommandSender
 import net.mamoe.mirai.console.command.MemberCommandSender
@@ -8,11 +9,13 @@ import net.mamoe.mirai.console.command.SimpleCommand
 import net.mamoe.mirai.console.util.sendAnsiMessage
 import net.mamoe.mirai.message.data.At
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
+import org.zrnq.mclient.MClientOptions
 import org.zrnq.mclient.output.APIOutputHandler
 import org.zrnq.mclient.parseAddress
 import org.zrnq.mclient.renderBasicInfoImage
 import org.zrnq.mclient.secondToReadableTime
 import org.zrnq.mcmotd.ImageUtil.appendPlayerHistory
+import org.zrnq.mcmotd.McMotd.reload
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -149,6 +152,23 @@ object HttpServerCommand : SimpleCommand(McMotd, "mcapi", description = "获取H
             return
         }
         reply(RateLimiter.getRecordData())
+    }
+}
+
+@Suppress("unused")
+object ConfigReloadCommand : SimpleCommand(McMotd, "mcreload", description = "重载插件配置") {
+    @Handler
+    suspend fun CommandSender.handle() {
+        // run inside McMotd.timer to avoid ConcurrentModification with player history recording.
+        McMotd.timer.schedule(object : TimerTask() {
+            override fun run() {
+                PluginConfig.reload()
+                MClientOptions.loadPluginConfig()
+                runBlocking {
+                    this@handle.reply("配置重载完成")
+                }
+            }
+        }, 0)
     }
 }
 

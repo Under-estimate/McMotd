@@ -4,6 +4,7 @@ import com.alibaba.fastjson.parser.ParserConfig
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import net.mamoe.mirai.console.command.Command
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.unregister
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
@@ -20,23 +21,21 @@ object McMotd : KotlinPlugin(
     JvmPluginDescription(
         id = "org.zrnq.mcmotd",
         name = "Minecraft MOTD Fetcher",
-        version = "1.1.19",
+        version = "1.1.20",
     ) {
         author("ZRnQ")
         info("""以图片的形式获取指定Minecraft服务器的基本信息""")
     }
 ) {
+    private lateinit var commandList : List<Command>
     override fun onEnable() {
         miraiLogger = logger
         logger.info { "McMotd is loading" }
         ParserConfig.getGlobalInstance().isSafeMode = true
         PluginConfig.reload()
         PluginData.reload()
-        QueryCommand.register()
-        BindCommand.register()
-        DelCommand.register()
-        RecordCommand.register()
-        HttpServerCommand.register()
+        commandList = listOf(QueryCommand, BindCommand, DelCommand, RecordCommand, HttpServerCommand, ConfigReloadCommand)
+        commandList.forEach { it.register() }
         MClientOptions.loadPluginConfig()
         startRecord()
         configureHttpServer()
@@ -44,16 +43,12 @@ object McMotd : KotlinPlugin(
 
     override fun onDisable() {
         logger.info { "McMotd is unloading" }
-        QueryCommand.unregister()
-        BindCommand.unregister()
-        DelCommand.unregister()
-        RecordCommand.unregister()
-        HttpServerCommand.unregister()
+        commandList.forEach { it.unregister() }
         stopRecord()
         stopHttpServer()
     }
 
-    private lateinit var timer : Timer
+    lateinit var timer : Timer
 
     private fun startRecord() {
         timer = Timer()

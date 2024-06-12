@@ -32,11 +32,15 @@
 获取MC服务器信息： `org.zrnq.mcmotd:command.mcp`  
 绑定服务器到群聊： `org.zrnq.mcmotd:command.mcadd`  
 删除群聊绑定的服务器： `org.zrnq.mcmotd:command.mcdel`  
-启动/停止服务器的在线人数记录功能： `org.zrnq.mcmotd:command.mcrec`
-获取http API访问计数： `org.zrnq.mcmotd:command.mcapi`
+启动/停止服务器的在线人数记录功能： `org.zrnq.mcmotd:command.mcrec`  
+获取http API访问计数： `org.zrnq.mcmotd:command.mcapi`  
+重载插件配置： `org.zrnq.mcmotd:command.mcreload`
 ## 插件命令
-> /mcp (服务器地址/服务器名称) : 查询指定地址或绑定到指定名称上的服务器信息，当本群仅绑定了一个服务器时可省略参数。
-其中，服务器地址可以仅有域名，如`mc.example.com`，也可以带有端口号，如`mc.example.com:12345`  
+> /mcp (服务器地址/服务器名称) : 查询指定地址或绑定到指定名称上的服务器信息，当本群仅绑定了一个服务器时可省略参数。  
+> 
+> 其中，服务器地址可以仅有域名，如`mc.example.com`，也可以带有端口号，如`mc.example.com:12345`。  
+> 
+> 若服务器的玩家列表信息需要通过[Query协议](https://wiki.vg/Query)获取，则需要同时指定服务器连接端口和Query端口，如`mc.example.com:12345:23456`。
 
 > /mcadd <服务器名称> <服务器地址> : 将指定地址的服务器绑定到指定名称上。各个群聊绑定的服务器相互独立。  
 
@@ -44,7 +48,9 @@
 
 > /mcrec <服务器地址> (true/false) : 启动/停止对于指定服务器的在线人数记录，仅有启用了在线人数记录的服务器才会在查询结果图片中附加历史在线人数信息
 
-> /mcapi : 获取http API访问计数信息(需要启用http API访问计数功能)
+> /mcapi : 获取http API访问计数信息(需要启用http API访问计数功能)  
+
+> /mcreload : 重载插件配置
 ## 插件配置
 插件的配置文件位于`/config/org.zrnq.mcmotd/mcmotd.yml`  
 
