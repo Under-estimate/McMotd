@@ -13,7 +13,7 @@ fun pingInternal(target : ServerAddress, outputHandler : AbstractOutputHandler) 
             try {
                 outputHandler.onAttemptAddress("${it.first}:${it.second}")
                 val info = getInfo(it.first, it.second, target.queryPort)
-                    .let { if(!configStorage.showTrueAddress) it.setAddress(target.originalAddress) else it }
+                    .let { if(!configStorage.showTrueAddress) it.setOriginalAddress(target.originalAddress) else it }
                 outputHandler.onSuccess(info)
                 outputHandler.afterPing()
                 return
@@ -59,7 +59,7 @@ fun getInfo(address : String, port : Int = 25565, queryPort: Int = -1) : ServerI
             -1
         }
 
-        ServerInfo(result, latency).setAddress("$address:$port")
+        ServerInfo("$address:$port", result, latency)
     }
     if(queryPort < 0) return serverInfo
     val queryInfo = try {

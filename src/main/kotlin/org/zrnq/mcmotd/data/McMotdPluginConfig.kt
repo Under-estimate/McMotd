@@ -14,6 +14,7 @@ object McMotdPluginConfig : AutoSavePluginConfig("mcmotd"), McMotdConfig {
     override val recordInterval by value(300)
     override val recordLimit by value(21600)
     override val background by value("#000000")
+    override val showPeakPlayers by value(false)
 
     override val httpServerPort by value(0)
     override val httpServerMapping by value(mutableMapOf<String, String>())

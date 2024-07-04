@@ -60,6 +60,7 @@
 | showTrueAddress               | 布尔值(默认`false`)           | 设置为`true`时，服务器状态图片中显示服务器的真实地址。设置为`false`时，服务器状态图片中显示服务器的SRV地址                                                                                          |
 | showServerVersion             | 布尔值(默认`false`)           | 设置为`true`时，服务器状态图片中显示服务器版本号                                                                                                                            |
 | showPlayerList                | 布尔值(默认`true`)            | 设置为`true`时，服务器状态图片中显示当前在线的部分玩家(某些服务器可能不提供此信息，或提供非玩家信息的任意文本)                                                                                            |
+| showPeakPlayers               | 布尔值(默认`false`)           | 设置为`true`时，服务器状态图片中将展示该服务器的历史最大在线人数（需要开启历史在线人数纪录）                                                                                                      |
 | dnsServerList                 | 字符串列表                    | 指定进行SRV解析时所用的DNS服务器                                                                                                                                    |
 | recordOnlinePlayer            | 字符串列表                    | 已启用历史在线人数记录的服务器                                                                                                                                        |
 | recordInterval                | 整数                       | 记录在线人数的时间间隔(秒)                                                                                                                                         |

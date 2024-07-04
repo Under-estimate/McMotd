@@ -9,6 +9,7 @@ import java.io.File
 class McMotdStandaloneData : McMotdData {
     override val relation = mutableMapOf<Long, MutableList<Pair<String, String>>>()
     override val history = mutableMapOf<String, MutableList<Pair<Long, Int>>>()
+    override val peakPlayers = mutableMapOf<String, Int>()
 
     fun save() {
         val file = File(savefile)
@@ -20,14 +21,12 @@ class McMotdStandaloneData : McMotdData {
             val file = File(savefile)
             if(file.exists()) {
                 try {
-                    return Yaml.default.decodeFromString(serializer(), file.readText())
+                    return Yaml.default.decodeFromString(serializer(), file.readText()).also { it.save() }
                 } catch (e: Exception) {
                     genericLogger.error("Error reading data file", e)
                 }
             }
-            val newInstance = McMotdStandaloneData()
-            newInstance.save()
-            return newInstance
+            return McMotdStandaloneData().also { it.save() }
         }
     }
 }

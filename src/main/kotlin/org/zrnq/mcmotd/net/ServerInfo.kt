@@ -5,7 +5,9 @@ import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
 import org.zrnq.mcmotd.*
 
-class ServerInfo(response : String, private val latency : Int) {
+class ServerInfo(private val actualAddress: String,
+                 response : String,
+                 private val latency : Int) {
     /**服务器图标*/
     val favicon : String?
     /**服务器描述*/
@@ -18,8 +20,11 @@ class ServerInfo(response : String, private val latency : Int) {
     private var maxPlayerCount : Int?
     /**服务器提供的部分在线玩家列表*/
     private var samplePlayerList : String?
+    /**本次查询用户所提供的原始服务器地址*/
+    private lateinit var originalAddress : String
     /**服务器的显示地址*/
-    private lateinit var serverAddress : String
+    private val serverAddress : String
+        get() = if(configStorage.showTrueAddress) actualAddress else originalAddress
 
     init {
         val json = JSON.parseObject(response)
@@ -33,8 +38,8 @@ class ServerInfo(response : String, private val latency : Int) {
         samplePlayerList = playerJson?.getJSONArray("sample")?.toPlayerListString(10)
     }
 
-    fun setAddress(address : String) : ServerInfo {
-        serverAddress = address
+    fun setOriginalAddress(address : String) : ServerInfo {
+        originalAddress = address
         return this
     }
 
@@ -59,11 +64,15 @@ class ServerInfo(response : String, private val latency : Int) {
 
     private fun getPlayerDescriptionHTML(): String {
         if(onlinePlayerCount == null) return "服务器未提供在线玩家信息"
-        var playerCount = "在线人数: $onlinePlayerCount/$maxPlayerCount　"
-        if(!configStorage.showPlayerList) return playerCount
-        playerCount += "玩家列表: "
-        if(samplePlayerList == null) return playerCount + "没有信息"
-        return playerCount + jsonStringToHTML(JSON.parseObject("{\"text\":\"$samplePlayerList\"}"))
+        val playerCount = StringBuilder("在线人数: $onlinePlayerCount")
+        if(configStorage.showPeakPlayers && dataStorage.peakPlayers.contains(originalAddress)) {
+            playerCount.append("(${dataStorage.peakPlayers[originalAddress]})")
+        }
+        playerCount.append("/$maxPlayerCount　")
+        if(!configStorage.showPlayerList) return playerCount.toString()
+        playerCount.append("玩家列表: ")
+        if(samplePlayerList == null) return playerCount.append("没有信息").toString()
+        return playerCount.append(jsonStringToHTML(JSON.parseObject("{\"text\":\"$samplePlayerList\"}"))).toString()
     }
 
 

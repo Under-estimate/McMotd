@@ -18,6 +18,7 @@ interface McMotdConfig {
     val recordInterval : Int
     val recordLimit : Int
     val background : String
+    val showPeakPlayers: Boolean
 
     val httpServerPort : Int
     val httpServerMapping : MutableMap<String, String>

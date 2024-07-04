@@ -17,6 +17,7 @@ class McMotdStandaloneConfig : McMotdConfig {
     override var recordInterval = 300
     override var recordLimit = 21600
     override var background = "#000000"
+    override val showPeakPlayers = false
 
     override var httpServerPort = 0
     override var httpServerMapping = mutableMapOf<String, String>()
@@ -35,14 +36,12 @@ class McMotdStandaloneConfig : McMotdConfig {
             val file = File(savefile)
             if(file.exists()) {
                 try {
-                    return Yaml.default.decodeFromString(serializer(), file.readText())
+                    return Yaml.default.decodeFromString(serializer(), file.readText()).also { it.save() }
                 } catch (e : Exception) {
                     genericLogger.error("Error reading config file", e)
                 }
             }
-            val newInstance = McMotdStandaloneConfig()
-            newInstance.save()
-            return newInstance
+            return McMotdStandaloneConfig().also { it.save() }
         }
     }
 }
