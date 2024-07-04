@@ -1,9 +1,7 @@
 package org.zrnq.mcmotd
 
-import org.zrnq.mclient.MClientOptions
-import org.zrnq.mclient.addBackground
-import org.zrnq.mclient.createTransparentImage
 import org.zrnq.mcmotd.ColorScheme.toTransparent
+import org.zrnq.mcmotd.data.ParsedConfig
 import java.awt.*
 import java.awt.image.BufferedImage
 import java.text.SimpleDateFormat
@@ -16,8 +14,8 @@ import kotlin.random.Random
 object ImageUtil {
     fun BufferedImage.appendPlayerHistory(address : String) : BufferedImage {
         val playerHistoryHeight = 200
-        if(!PluginConfig.recordOnlinePlayer.contains(address)) return this.addBackground()
-        val history = PluginData.getHistory(address)
+        if(!configStorage.recordOnlinePlayer.contains(address)) return this.addBackground()
+        val history = dataStorage.getHistory(address)
         val result = createTransparentImage(1000, height + playerHistoryHeight)
         val historyImage = renderPlayerHistory(history)
 
@@ -32,7 +30,7 @@ object ImageUtil {
         val result = createTransparentImage(width, height)
         val g = result.createGraphics()
         g.color = Color.WHITE
-        g.font = MClientOptions.FONT
+        g.font = ParsedConfig.font
         g.setRenderingHints(mapOf(
             RenderingHints.KEY_TEXT_ANTIALIASING to RenderingHints.VALUE_TEXT_ANTIALIAS_ON,
             RenderingHints.KEY_ANTIALIASING to RenderingHints.VALUE_ANTIALIAS_ON))
@@ -138,7 +136,7 @@ object ImageUtil {
     }
 
     fun Graphics2D.drawErrorMessage(msg : String, x : Int, y : Int, width: Int, height: Int) {
-        font = MClientOptions.FONT
+        font = ParsedConfig.font
         fillStripedRect(Color.black, ColorScheme.darkRed, x, y, width, height)
         val msgRectWidth = fontMetrics.stringWidth(msg) + 30
         val msgRectHeight = fontMetrics.height + 20

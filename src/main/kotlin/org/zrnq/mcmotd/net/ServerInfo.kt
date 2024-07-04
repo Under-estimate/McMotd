@@ -1,8 +1,9 @@
-package org.zrnq.mclient
+package org.zrnq.mcmotd.net
 
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
+import org.zrnq.mcmotd.*
 
 class ServerInfo(response : String, private val latency : Int) {
     /**服务器图标*/
@@ -59,7 +60,7 @@ class ServerInfo(response : String, private val latency : Int) {
     private fun getPlayerDescriptionHTML(): String {
         if(onlinePlayerCount == null) return "服务器未提供在线玩家信息"
         var playerCount = "在线人数: $onlinePlayerCount/$maxPlayerCount　"
-        if(!MClientOptions.showPlayerList) return playerCount
+        if(!configStorage.showPlayerList) return playerCount
         playerCount += "玩家列表: "
         if(samplePlayerList == null) return playerCount + "没有信息"
         return playerCount + jsonStringToHTML(JSON.parseObject("{\"text\":\"$samplePlayerList\"}"))
@@ -73,7 +74,7 @@ class ServerInfo(response : String, private val latency : Int) {
             .append("<div style='color:white;margin-top: 10px;'>访问地址: $serverAddress　Ping: ")
             .append(getPingHTML())
             .append("</div>")
-        if(MClientOptions.showServerVersion) {
+        if(configStorage.showServerVersion) {
             sb.append("<div style='color:white;'>")
                 .append(version.limitLength(50))
                 .append("</div>")

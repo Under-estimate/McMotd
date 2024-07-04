@@ -1,14 +1,12 @@
-package org.zrnq.mcmotd
+package org.zrnq.mcmotd.data
 
-import net.mamoe.mirai.console.data.AutoSavePluginData
-import net.mamoe.mirai.console.data.value
+import org.zrnq.mcmotd.configStorage
 
-object PluginData : AutoSavePluginData("mcmotd_relation") {
-    var relation by value<MutableMap<Long, MutableList<Pair<String, String>>>>()
+interface McMotdData {
+    val relation : MutableMap<Long, MutableList<Pair<String, String>>>
+    val history : MutableMap<String, MutableList<Pair<Long, Int>>>
 
-    var history by value<MutableMap<String, MutableList<Pair<Long, Int>>>>()
-
-    operator fun get(groupId : Long) : MutableList<Pair<String, String>>? {
+    fun getBoundServer(groupId : Long) : MutableList<Pair<String, String>>? {
         val result = relation[groupId]
             ?: return null
         if(result.isEmpty()) {
@@ -18,7 +16,7 @@ object PluginData : AutoSavePluginData("mcmotd_relation") {
         return result
     }
 
-    operator fun set(groupId : Long, value : MutableList<Pair<String, String>>) {
+    fun setBoundServer(groupId : Long, value : MutableList<Pair<String, String>>) {
         if(value.isEmpty())
             relation.remove(groupId)
         else
@@ -28,7 +26,7 @@ object PluginData : AutoSavePluginData("mcmotd_relation") {
     fun getHistory(address : String) : MutableList<Pair<Long, Int>> {
         val result = history[address]
             ?: return mutableListOf()
-        val limit = System.currentTimeMillis() - PluginConfig.recordLimit * 1000
+        val limit = System.currentTimeMillis() - configStorage.recordLimit * 1000
         result.removeIf { it.first < limit }
         return result
     }

@@ -1,8 +1,10 @@
-package org.zrnq.mclient
+package org.zrnq.mcmotd
 
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
+import org.zrnq.mcmotd.data.ParsedConfig
+import org.zrnq.mcmotd.net.ServerInfo
 import java.awt.*
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
@@ -46,7 +48,7 @@ fun renderBasicInfoImage(info: ServerInfo) : BufferedImage {
     textRenderer.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, true)
     textRenderer.text = textContent
     textRenderer.background = Color(0,0,0,0)
-    textRenderer.font = MClientOptions.FONT
+    textRenderer.font = ParsedConfig.font
     textRenderer.setSize(textWidth, Short.MAX_VALUE.toInt())
 
     val textSize = textRenderer.preferredSize
@@ -54,7 +56,7 @@ fun renderBasicInfoImage(info: ServerInfo) : BufferedImage {
     val result = createTransparentImage(width, imageHeight)
 
     val g = result.createGraphics()
-    g.font = MClientOptions.FONT
+    g.font = ParsedConfig.font
     g.setRenderingHints(mapOf(
         RenderingHints.KEY_INTERPOLATION to RenderingHints.VALUE_INTERPOLATION_BICUBIC,
         RenderingHints.KEY_TEXT_ANTIALIASING to RenderingHints.VALUE_TEXT_ANTIALIAS_ON
@@ -103,12 +105,12 @@ fun createTransparentImage(width: Int, height: Int) : BufferedImage {
 fun generateBackgroundImage(width : Int, height : Int) : BufferedImage {
     val result = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
     val g = result.createGraphics()
-    if(MClientOptions.isPureColorBackground) {
-        g.color = MClientOptions.backgroundColor
+    if(ParsedConfig.isPureColorBackground) {
+        g.color = ParsedConfig.backgroundColor
         g.fillRect(0, 0, width, height)
         return result
     }
-    val backgroundImage = MClientOptions.backgroundImage!!
+    val backgroundImage = ParsedConfig.backgroundImage!!
     for(h in 0 until height step backgroundImage.height) {
         for(w in 0 until width step backgroundImage.width) {
             g.drawImage(backgroundImage, w, h, null)
@@ -275,66 +277,3 @@ val colorSequence = listOf(
     "#ffff55",
     "#ffffff"
 )
-
-object AddressRegexes {
-    val ipv4addr = Regex("^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$")
-    val ipv6addr = Regex(
-        "^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|" +
-            "([0-9a-fA-F]{1,4}:){1,7}:|" +
-            "([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|" +
-            "([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|" +
-            "([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|" +
-            "([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|" +
-            "([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|" +
-            "[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|" +
-            ":((:[0-9a-fA-F]{1,4}){1,7}|:)|" +
-            "fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]+|" +
-            "::(ffff(:0{1,4})?:)?((25[0-5]|(2[0-4]|1?[0-9])?[0-9])\\.){3}(25[0-5]|(2[0-4]|1?[0-9])?[0-9])|" +
-            "([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1?[0-9])?[0-9])\\.){3}(25[0-5]|(2[0-4]|1?[0-9])?[0-9]))$")
-    val addrWithPort = Regex("^[^:]*?(:((6553[0-5])|(655[0-2][0-9])|(65[0-4][0-9]{2})|(6[0-4][0-9]{3})|([1-5][0-9]{4})|([0-5]{0,5})|([0-9]{1,4}))){1,2}$")
-    val ipv6addrWithPort = Regex("^\\[[^\\[\\]]*?](:((6553[0-5])|(655[0-2][0-9])|(65[0-4][0-9]{2})|(6[0-4][0-9]{3})|([1-5][0-9]{4})|([0-5]{0,5})|([0-9]{1,4}))){1,2}$")
-    val genericHostname = Regex("^(localhost)|([^:.]+(\\.[^:.]+)+)$")
-}
-
-private val addressCache = Collections.synchronizedMap(WeakHashMap<String, ServerAddress>())
-
-fun String.parseAddressCached(): ServerAddress? {
-    var result = addressCache[this]
-    if(result == null) {
-        result = parseAddress()
-        if(result != null) addressCache[this] = result
-    }
-    return result
-}
-
-fun String.parseAddress(): ServerAddress? {
-    if(matches(AddressRegexes.addrWithPort)) {
-        val segments = split(':')
-        val serverAddress = segments[0]
-        val serverPort = segments[1].toInt()
-        val queryPort = if(segments.size >= 3) segments[2].toInt() else -1
-        val serverOriginalAddress = if(segments.size >= 3) "$serverAddress:$serverPort" else this
-        if(serverAddress.matches(AddressRegexes.ipv4addr))
-            return IPServerAddress(serverOriginalAddress, serverAddress, serverPort, queryPort)
-        if(serverAddress.matches(AddressRegexes.genericHostname))
-            return HostnameServerAddress(serverOriginalAddress, serverAddress, false, serverPort, queryPort)
-        return null
-    }
-    if(matches(AddressRegexes.ipv4addr))
-        return IPServerAddress(this, this)
-    if(matches(AddressRegexes.genericHostname))
-        return HostnameServerAddress(this, this)
-    if(matches(AddressRegexes.ipv6addrWithPort)) {
-        val segments = split("]:")
-        val serverAddress = segments[0].substring(1)
-        val portSegments = segments[1].split(':')
-        val serverPort = portSegments[0].toInt()
-        val queryPort = if(portSegments.size >= 2) segments[1].toInt() else -1
-        val serverOriginalAddress = if(portSegments.size >= 2) "[$serverAddress]:$serverPort" else this
-        if(serverAddress.matches(AddressRegexes.ipv6addr))
-            return IPServerAddress(serverOriginalAddress, serverAddress, serverPort, queryPort)
-    }
-    if(matches(AddressRegexes.ipv6addr))
-        return IPServerAddress(this, this)
-    return null
-}

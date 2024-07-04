@@ -1,6 +1,7 @@
-package org.zrnq.mclient
+package org.zrnq.mcmotd
 
-import org.zrnq.mclient.output.AbstractOutputHandler
+import org.zrnq.mcmotd.output.AbstractOutputHandler
+import org.zrnq.mcmotd.net.*
 import java.net.InetSocketAddress
 import java.net.Socket
 
@@ -12,7 +13,7 @@ fun pingInternal(target : ServerAddress, outputHandler : AbstractOutputHandler) 
             try {
                 outputHandler.onAttemptAddress("${it.first}:${it.second}")
                 val info = getInfo(it.first, it.second, target.queryPort)
-                    .let { if(!MClientOptions.showTrueAddress) it.setAddress(target.originalAddress) else it }
+                    .let { if(!configStorage.showTrueAddress) it.setAddress(target.originalAddress) else it }
                 outputHandler.onSuccess(info)
                 outputHandler.afterPing()
                 return
@@ -34,24 +35,25 @@ fun getInfo(address : String, port : Int = 25565, queryPort: Int = -1) : ServerI
         val input = socket.getInputStream().buffered()
         val output = socket.getOutputStream()
 
-        output.write(Packet(0,
+        output.write(
+            ProtocolPacket(0,
             PVarInt(757),
             PString(address),
             PUnsignedShort(port.toUShort()),
             PVarInt(1)).byteArray)
         output.flush()
 
-        output.write(Packet(0).byteArray)
+        output.write(ProtocolPacket(0).byteArray)
         output.flush()
 
-        val result = Packet(input, PString::class).data[0].value as String
+        val result = ProtocolPacket(input, PString::class).data[0].value as String
 
         val latency = try {
             val time = System.currentTimeMillis()
-            output.write(Packet(1, PLong(time)).byteArray)
+            output.write(ProtocolPacket(1, PLong(time)).byteArray)
             output.flush()
             // https://wiki.vg/Protocol#Ping : The returned value from server could be any number
-            Packet(input, PLong::class)
+            ProtocolPacket(input, PLong::class)
             (System.currentTimeMillis() - time).toInt()
         } catch (e : Exception) {
             -1
@@ -85,7 +87,8 @@ fun getQueryInfo(address: String, port: Int) = QuerySession(InetSocketAddress(ad
     }
     val serverProperties = QMap()
     val playerList = QList()
-    session.receivePacket(QueryPacketType.Stat, listOf(
+    session.receivePacket(
+        QueryPacketType.Stat, listOf(
         QConstRegion(splitNum),
         serverProperties,
         QConstRegion(player_),

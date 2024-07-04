@@ -1,4 +1,4 @@
-package org.zrnq.mclient
+package org.zrnq.mcmotd.net
 
 import java.io.InputStream
 import java.nio.ByteBuffer

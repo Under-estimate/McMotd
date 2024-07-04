@@ -9,13 +9,13 @@ import net.mamoe.mirai.console.command.SimpleCommand
 import net.mamoe.mirai.console.util.sendAnsiMessage
 import net.mamoe.mirai.message.data.At
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
-import org.zrnq.mclient.MClientOptions
-import org.zrnq.mclient.output.APIOutputHandler
-import org.zrnq.mclient.parseAddress
-import org.zrnq.mclient.renderBasicInfoImage
-import org.zrnq.mclient.secondToReadableTime
+import org.zrnq.mcmotd.output.APIOutputHandler
 import org.zrnq.mcmotd.ImageUtil.appendPlayerHistory
 import org.zrnq.mcmotd.McMotd.reload
+import org.zrnq.mcmotd.data.McMotdPluginData
+import org.zrnq.mcmotd.data.McMotdPluginConfig
+import org.zrnq.mcmotd.http.RateLimiter
+import org.zrnq.mcmotd.net.parseAddress
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -27,7 +27,7 @@ import javax.imageio.ImageIO
 object QueryCommand :  SimpleCommand(McMotd, "mcp", description = "获取指定MC服务器的信息") {
     @Handler
     suspend fun MemberCommandSender.handle() {
-        val serverList = PluginData[this.group.id]
+        val serverList = McMotdPluginData.getBoundServer(this.group.id)
         if(serverList == null) {
             reply("本群未绑定服务器，请使用/mcadd绑定服务器或直接提供服务器地址")
             return
@@ -41,7 +41,7 @@ object QueryCommand :  SimpleCommand(McMotd, "mcp", description = "获取指定M
     @Handler
     suspend fun CommandSender.handle(target : String)  {
         if(this is MemberCommandSender) {
-            val serverList = PluginData[this.group.id]
+            val serverList = McMotdPluginData.getBoundServer(this.group.id)
             if(serverList != null) {
                 val server = serverList.firstOrNull { it.first == target }
                 if(server != null) {
@@ -62,7 +62,7 @@ object QueryCommand :  SimpleCommand(McMotd, "mcp", description = "获取指定M
             reply("服务器地址格式错误，请指定形如: mc.example.com 或者 mc.example.com:25565 的地址")
             return@withContext
         }
-        org.zrnq.mclient.pingInternal(address, APIOutputHandler(McMotd.logger, { error = it }, { image = renderBasicInfoImage(it).appendPlayerHistory(target) }))
+        pingInternal(address, APIOutputHandler({ error = it }, { image = renderBasicInfoImage(it).appendPlayerHistory(target) }))
         if(image == null)
             reply(error!!)
         else
@@ -74,7 +74,7 @@ object QueryCommand :  SimpleCommand(McMotd, "mcp", description = "获取指定M
 object BindCommand : SimpleCommand(McMotd, "mcadd", description = "为当前群聊绑定MC服务器") {
     @Handler
     suspend fun MemberCommandSender.handle(name : String, address : String) {
-        val serverList = PluginData[this.group.id] ?: mutableListOf()
+        val serverList = McMotdPluginData.getBoundServer(this.group.id) ?: mutableListOf()
         val existing = serverList.find { it.first == name }
         if(existing != null) {
             reply("服务器名称已存在：$name")
@@ -85,7 +85,7 @@ object BindCommand : SimpleCommand(McMotd, "mcadd", description = "为当前群�
             return
         }
         serverList.add(name to address)
-        PluginData[this.group.id] = serverList
+        McMotdPluginData.setBoundServer(this.group.id, serverList)
         reply("绑定成功：$name -> $address")
     }
 }
@@ -94,14 +94,14 @@ object BindCommand : SimpleCommand(McMotd, "mcadd", description = "为当前群�
 object DelCommand : SimpleCommand(McMotd, "mcdel", description = "删除当前群聊绑定的服务器") {
     @Handler
     suspend fun MemberCommandSender.handle(name : String) {
-        val serverList = PluginData[this.group.id] ?: mutableListOf()
+        val serverList = McMotdPluginData.getBoundServer(this.group.id) ?: mutableListOf()
         val existing = serverList.find { it.first == name }
         if(existing == null) {
             reply("本群没有绑定服务器：$name。可用的服务器：${serverList.serverNameList}")
             return
         }
         serverList.remove(existing)
-        PluginData[this.group.id] = serverList
+        McMotdPluginData.setBoundServer(this.group.id, serverList)
         reply("删除成功")
     }
 }
@@ -110,16 +110,16 @@ object DelCommand : SimpleCommand(McMotd, "mcdel", description = "删除当前�
 object RecordCommand : SimpleCommand(McMotd, "mcrec", description = "指定需要记录在线人数的服务器") {
     @Handler
     suspend fun MemberCommandSender.handle() {
-        if(PluginConfig.recordOnlinePlayer.isEmpty()) {
+        if(McMotdPluginConfig.recordOnlinePlayer.isEmpty()) {
             reply("没有已启用在线人数记录的服务器，使用\"/mcrec <服务器地址> true\"以开始记录指定服务器的在线人数")
             return
         }
-        reply("已启用在线人数记录的服务器:${PluginConfig.recordOnlinePlayer.joinToString(",")}。每${PluginConfig.recordInterval.secondToReadableTime()}记录一次在线人数，最多保存${PluginConfig.recordLimit.secondToReadableTime()}之前的记录。")
+        reply("已启用在线人数记录的服务器:${McMotdPluginConfig.recordOnlinePlayer.joinToString(",")}。每${McMotdPluginConfig.recordInterval.secondToReadableTime()}记录一次在线人数，最多保存${McMotdPluginConfig.recordLimit.secondToReadableTime()}之前的记录。")
     }
 
     @Handler
     suspend fun MemberCommandSender.handle(address : String) {
-        if(PluginConfig.recordOnlinePlayer.contains(address))
+        if(McMotdPluginConfig.recordOnlinePlayer.contains(address))
             reply("服务器[$address]已启用在线人数记录，使用\"/mcrec $address false\"禁用此服务器的在线人数记录功能")
         else
             reply("服务器[$address]未启用在线人数记录，使用\"/mcrec $address true\"启用此服务器的在线人数记录功能")
@@ -128,12 +128,12 @@ object RecordCommand : SimpleCommand(McMotd, "mcrec", description = "指定需�
     @Handler
     suspend fun MemberCommandSender.handle(address : String, enable : Boolean) {
         if(enable) {
-            if(!PluginConfig.recordOnlinePlayer.contains(address))
-                PluginConfig.recordOnlinePlayer.add(address)
+            if(!McMotdPluginConfig.recordOnlinePlayer.contains(address))
+                McMotdPluginConfig.recordOnlinePlayer.add(address)
             reply("已开始记录${address}的在线人数")
         } else {
-            PluginConfig.recordOnlinePlayer.remove(address)
-            PluginData.history.remove(address)
+            McMotdPluginConfig.recordOnlinePlayer.remove(address)
+            McMotdPluginData.history.remove(address)
             reply("已停止记录${address}的在线人数")
         }
     }
@@ -143,11 +143,11 @@ object RecordCommand : SimpleCommand(McMotd, "mcrec", description = "指定需�
 object HttpServerCommand : SimpleCommand(McMotd, "mcapi", description = "获取Http API访问计数信息") {
     @Handler
     suspend fun CommandSender.handle() {
-        if(PluginConfig.httpServerPort == 0) {
+        if(McMotdPluginConfig.httpServerPort == 0) {
             reply("Http API未开启")
             return
         }
-        if(PluginConfig.httpServerAccessRecordRefresh == 0) {
+        if(McMotdPluginConfig.httpServerAccessRecordRefresh == 0) {
             reply("Http API访问计数功能未开启")
             return
         }
@@ -160,10 +160,10 @@ object ConfigReloadCommand : SimpleCommand(McMotd, "mcreload", description = "�
     @Handler
     suspend fun CommandSender.handle() {
         // run inside McMotd.timer to avoid ConcurrentModification with player history recording.
-        McMotd.timer.schedule(object : TimerTask() {
+        PlayerHistory.timer.schedule(object : TimerTask() {
             override fun run() {
-                PluginConfig.reload()
-                MClientOptions.loadPluginConfig()
+                McMotdPluginConfig.reload()
+                configStorage.checkConfig()
                 runBlocking {
                     this@handle.reply("配置重载完成")
                 }

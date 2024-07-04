@@ -1,7 +1,9 @@
-package org.zrnq.mclient.output
+package org.zrnq.mcmotd.output
 
-import net.mamoe.mirai.utils.MiraiLogger
-import org.zrnq.mclient.*
+import org.zrnq.mcmotd.*
+import org.zrnq.mcmotd.data.ParsedConfig
+import org.zrnq.mcmotd.net.ServerInfo
+import org.zrnq.mcmotd.net.parseAddress
 import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Dimension
@@ -43,12 +45,12 @@ abstract class AbstractOutputHandler {
 class GUIOutputHandler : AbstractOutputHandler() {
     private val errBuilder = StringBuilder()
     private val mainFrame = JFrame("Ping MC Server")
-    private val progress = JProgressBar().apply { isIndeterminate = true; isVisible = false; isStringPainted = true; font = MClientOptions.FONT }
-    private val resultLabel = JLabel().apply { font = MClientOptions.FONT; foreground = Color.RED }
+    private val progress = JProgressBar().apply { isIndeterminate = true; isVisible = false; isStringPainted = true; font = ParsedConfig.font }
+    private val resultLabel = JLabel().apply { font = ParsedConfig.font; foreground = Color.RED }
     private val textField = JTextField()
     init {
         textField.apply {
-            font = MClientOptions.FONT
+            font = ParsedConfig.font
             preferredSize = Dimension(500, preferredSize.height)
             addKeyListener(object : KeyAdapter() {
                 override fun keyPressed(e : KeyEvent) {
@@ -70,7 +72,7 @@ class GUIOutputHandler : AbstractOutputHandler() {
         }
         val inputPane = JPanel().apply {
             layout = BorderLayout(20, 20)
-            add(JLabel("Ping Target:").apply { font = MClientOptions.FONT }, BorderLayout.WEST)
+            add(JLabel("Ping Target:").apply { font = ParsedConfig.font }, BorderLayout.WEST)
             add(JPanel().apply {
                 layout = BorderLayout()
                 add(progress, BorderLayout.CENTER)
@@ -123,7 +125,6 @@ class GUIOutputHandler : AbstractOutputHandler() {
 }
 
 class APIOutputHandler(
-    private val logger : MiraiLogger,
     private val fail : (String) -> Unit,
     private val success : (ServerInfo) -> Unit
 ) : AbstractOutputHandler() {
@@ -138,7 +139,7 @@ class APIOutputHandler(
     override fun onAttemptFailure(exception : Exception, address : String) {
         val message = exception.translateCommonException()
         if(message.contains(':'))
-            logger.warning("MC Ping Failed", exception)
+            genericLogger.warning("MC Ping Failed", exception)
         errBuilder.append("$address:$message\n")
     }
 

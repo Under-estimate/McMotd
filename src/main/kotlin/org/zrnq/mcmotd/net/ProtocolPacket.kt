@@ -1,9 +1,9 @@
-package org.zrnq.mclient
+package org.zrnq.mcmotd.net
 
 import java.io.InputStream
 import kotlin.reflect.KClass
 
-class Packet(var packetId : Int, vararg dataArgs : PacketData<*>) {
+class ProtocolPacket(var packetId : Int, vararg dataArgs : PacketData<*>) {
     val data = mutableListOf<PacketData<*>>()
     val byteArray : ByteArray
         get() {
@@ -25,6 +25,6 @@ class Packet(var packetId : Int, vararg dataArgs : PacketData<*>) {
             data.add(instance)
         }
         if(receivedLength != packetLength)
-            println("Packet length mismatch (Declared : ${packetLength}, Received : ${receivedLength})")
+            org.zrnq.mcmotd.genericLogger.error("Packet length mismatch (Declared : ${packetLength}, Received : ${receivedLength})")
     }
 }

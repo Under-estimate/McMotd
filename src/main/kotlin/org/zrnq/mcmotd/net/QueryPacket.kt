@@ -1,4 +1,4 @@
-package org.zrnq.mclient
+package org.zrnq.mcmotd.net
 
 import java.io.Closeable
 import java.net.DatagramPacket

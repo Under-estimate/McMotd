@@ -1,4 +1,4 @@
-package org.zrnq.mclient
+package org.zrnq.mcmotd.net
 
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
