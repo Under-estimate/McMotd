@@ -147,6 +147,19 @@ object ImageUtil {
         color = ColorScheme.brightRed
         paintTextCC(msg, x + width / 2, y + height / 2)
     }
+
+    fun combineImages(images: List<BufferedImage>) : BufferedImage {
+        val width = images[0].width
+        val height = images.sumOf { it.height }
+        val result = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
+        val g = result.createGraphics()
+        var currentY = 0
+        for (image in images) {
+            g.drawImage(image, 0, currentY, null)
+            currentY += image.height
+        }
+        return result
+    }
 }
 
 object ColorScheme {

@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "org.zrnq"
-version = "1.2.0"
+version = "1.2.1"
 val ktor_version = "2.3.12"
 
 repositories {

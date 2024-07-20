@@ -15,6 +15,7 @@ import org.zrnq.mcmotd.McMotd.reload
 import org.zrnq.mcmotd.data.McMotdPluginData
 import org.zrnq.mcmotd.data.McMotdPluginConfig
 import org.zrnq.mcmotd.http.RateLimiter
+import org.zrnq.mcmotd.net.ServerAddress
 import org.zrnq.mcmotd.net.parseAddress
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
@@ -35,20 +36,15 @@ object QueryCommand :  SimpleCommand(McMotd, "mcp", description = "获取指定M
         if(serverList.size == 1)
             doPing(serverList.first().second)
         else
-            reply("本群绑定了多个服务器，请指定服务器名称。可用的服务器：${serverList.serverNameList}")
+            pingMultiple(serverList.map { it.second })
     }
 
     @Handler
     suspend fun CommandSender.handle(target : String)  {
         if(this is MemberCommandSender) {
-            val serverList = McMotdPluginData.getBoundServer(this.group.id)
-            if(serverList != null) {
-                val server = serverList.firstOrNull { it.first == target }
-                if(server != null) {
-                    doPing(server.second)
-                    return
-                }
-            }
+            McMotdPluginData.getBoundServer(this.group.id)
+                ?.firstOrNull { it.first == target }
+                ?.let { doPing(it.second); return }
         }
         doPing(target)
     }
@@ -67,6 +63,29 @@ object QueryCommand :  SimpleCommand(McMotd, "mcp", description = "获取指定M
             reply(error!!)
         else
             reply(image!!)
+    }
+
+    private suspend fun CommandSender.pingMultiple(target: List<String>) = withContext(Dispatchers.IO) {
+        val addressList = mutableListOf<ServerAddress>()
+        target.forEach {
+            val parsed = it.parseAddress()
+            if(parsed == null) {
+                reply("配置的服务器地址\"$it\"有误，请检查配置文件")
+                return@withContext
+            }
+            addressList.add(parsed)
+        }
+        val imageList = mutableListOf<BufferedImage>()
+        addressList.forEachIndexed { index, addr ->
+            var error : String? = null
+            var image : BufferedImage? = null
+            pingInternal(addr, APIOutputHandler({ error = it }, { image = renderBasicInfoImage(it).appendPlayerHistory(target[index])}))
+            if(image == null)
+                reply("连接\"${target[index]}\"时出错：$error")
+            else
+                imageList.add(image!!)
+        }
+        reply(ImageUtil.combineImages(imageList))
     }
 }
 
