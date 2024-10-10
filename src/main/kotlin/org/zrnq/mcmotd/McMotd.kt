@@ -34,6 +34,8 @@ object McMotd : KotlinPlugin(
         dataStorage = McMotdPluginData
         configStorage.checkConfig()
 
+        QueryCommand.preparePermissions()
+
         commandList = listOf(QueryCommand, BindCommand, DelCommand, RecordCommand, HttpServerCommand, ConfigReloadCommand)
         commandList.forEach { it.register() }
 

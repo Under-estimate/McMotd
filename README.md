@@ -29,12 +29,13 @@
 ## 权限列表
 *有关权限部分的说明，参见[mirai-console的权限文档](https://github.com/mamoe/mirai-console/blob/master/docs/Permissions.md )*  
 根权限： `org.zrnq.mcmotd:*`  
-获取MC服务器信息： `org.zrnq.mcmotd:command.mcp`  
-绑定服务器到群聊： `org.zrnq.mcmotd:command.mcadd`  
-删除群聊绑定的服务器： `org.zrnq.mcmotd:command.mcdel`  
-启动/停止服务器的在线人数记录功能： `org.zrnq.mcmotd:command.mcrec`  
-获取http API访问计数： `org.zrnq.mcmotd:command.mcapi`  
-重载插件配置： `org.zrnq.mcmotd:command.mcreload`
++ 获取MC服务器信息： `org.zrnq.mcmotd:command.mcp`
+  + 仅允许获取本群绑定的服务器信息： `org.zrnq.mcmotd:command.mcp.strict`
++ 绑定服务器到群聊： `org.zrnq.mcmotd:command.mcadd`  
++ 删除群聊绑定的服务器： `org.zrnq.mcmotd:command.mcdel`  
++ 启动/停止服务器的在线人数记录功能： `org.zrnq.mcmotd:command.mcrec`  
++ 获取http API访问计数： `org.zrnq.mcmotd:command.mcapi`  
++ 重载插件配置： `org.zrnq.mcmotd:command.mcreload`
 ## 插件命令
 > /mcp (服务器地址/服务器名称) : 查询指定地址或绑定到指定名称上的服务器信息，当本群仅绑定了一个服务器时可省略参数。  
 > 

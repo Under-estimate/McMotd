@@ -6,11 +6,15 @@ import kotlinx.coroutines.withContext
 import net.mamoe.mirai.console.command.CommandSender
 import net.mamoe.mirai.console.command.MemberCommandSender
 import net.mamoe.mirai.console.command.SimpleCommand
+import net.mamoe.mirai.console.permission.Permission
+import net.mamoe.mirai.console.permission.PermissionService
+import net.mamoe.mirai.console.permission.PermissionService.Companion.testPermission
 import net.mamoe.mirai.console.util.sendAnsiMessage
 import net.mamoe.mirai.message.data.At
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import org.zrnq.mcmotd.output.APIOutputHandler
 import org.zrnq.mcmotd.ImageUtil.appendPlayerHistory
+import org.zrnq.mcmotd.McMotd.permissionId
 import org.zrnq.mcmotd.McMotd.reload
 import org.zrnq.mcmotd.data.McMotdPluginData
 import org.zrnq.mcmotd.data.McMotdPluginConfig
@@ -26,6 +30,25 @@ import javax.imageio.ImageIO
 
 @Suppress("unused")
 object QueryCommand :  SimpleCommand(McMotd, "mcp", description = "获取指定MC服务器的信息") {
+
+    override val permission: Permission
+        get() = strictPermission
+
+    private lateinit var strictPermission: Permission
+    private lateinit var relaxedPermission: Permission
+
+    fun preparePermissions() {
+        relaxedPermission = PermissionService.INSTANCE.register(
+            permissionId("command.mcp"),
+            "获取任意MC服务器的信息",
+            McMotd.parentPermission
+        )
+        strictPermission = PermissionService.INSTANCE.register(
+            permissionId("command.mcp.strict"),
+            "获取指定MC服务器的信息(仅限本群绑定的服务器)",
+            relaxedPermission)
+    }
+
     @Handler
     suspend fun MemberCommandSender.handle() {
         val serverList = McMotdPluginData.getBoundServer(this.group.id)
@@ -46,6 +69,7 @@ object QueryCommand :  SimpleCommand(McMotd, "mcp", description = "获取指定M
                 ?.firstOrNull { it.first == target }
                 ?.let { doPing(it.second); return }
         }
+        if(!relaxedPermission.testPermission(this)) return
         doPing(target)
     }
 
