@@ -3,15 +3,20 @@ package org.zrnq.mcmotd
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
+import kotlinx.coroutines.runBlocking
 import org.zrnq.mcmotd.data.ParsedConfig
 import org.zrnq.mcmotd.net.ServerInfo
 import java.awt.*
+import java.awt.event.ComponentAdapter
+import java.awt.event.ComponentEvent
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.util.*
 import javax.imageio.ImageIO
 import javax.swing.JEditorPane
 import javax.swing.JFrame
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 fun Int.secondToReadableTime() : String {
     return when {
@@ -34,7 +39,7 @@ inline fun <reified E> Exception.matches(msg : String? = null) = this::class == 
 
 fun String.limitLength(max : Int) = if (length > max) this.substring(0, max) + "..." else this
 
-fun renderBasicInfoImage(info: ServerInfo) : BufferedImage {
+fun renderBasicInfoImage(info: ServerInfo) : BufferedImage = runBlocking {
     val margin = 20
     val width = 1000
     val iconSize = 160
@@ -49,8 +54,16 @@ fun renderBasicInfoImage(info: ServerInfo) : BufferedImage {
     textRenderer.text = textContent
     textRenderer.background = Color(0,0,0,0)
     textRenderer.font = ParsedConfig.font
-    textRenderer.setSize(textWidth, Short.MAX_VALUE.toInt())
-
+    // [GH-ISSUE#28] must wait for the textRenderer to be resized, or we may get the wrong dimensions.
+    suspendCoroutine { cont ->
+        textRenderer.addComponentListener(object : ComponentAdapter() {
+            override fun componentResized(e: ComponentEvent) {
+                // Do not fetch the preferred size here.
+                cont.resume(Unit)
+            }
+        })
+        textRenderer.setSize(textWidth, Short.MAX_VALUE.toInt())
+    }
     val textSize = textRenderer.preferredSize
     val imageHeight = (textSize.height + 2 * margin).coerceAtLeast(iconSize + 2 * margin)
     val result = createTransparentImage(width, imageHeight)
@@ -69,7 +82,7 @@ fun renderBasicInfoImage(info: ServerInfo) : BufferedImage {
     g.drawRect(margin, margin, iconSize, iconSize)
 
     textRenderer.paint(g.create(textX, margin, textWidth, textSize.height))
-    return result
+    return@runBlocking result
 }
 
 fun paintStringWithBackground(str : String, g : Graphics2D, x : Int, y : Int, fg : Color, bg : Color, horizontalPadding : Int, verticalPadding : Int) {
