@@ -58,6 +58,7 @@
 | 配置项名称                         | 配置类型                     | 说明                                                                                                                                                     |
 |-------------------------------|--------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
 | fontName                      | 字符串(默认`Microsoft YaHei`) | 指定渲染图片时使用的字体名称                                                                                                                                         |
+| fontPath                      | 字符串(默认为空)                | 指定渲染图片时所使用的字体文件，如果指定了字体文件并且被成功加载，则不会使用`fontName`配置项(此配置项正常情况下无需使用。如果无法使用系统字体，请使用此配置项指定字体文件([#14](https://github.com/Under-estimate/McMotd/issues/14))) |
 | showTrueAddress               | 布尔值(默认`false`)           | 设置为`true`时，服务器状态图片中显示服务器的真实地址。设置为`false`时，服务器状态图片中显示服务器的SRV地址                                                                                          |
 | showServerVersion             | 布尔值(默认`false`)           | 设置为`true`时，服务器状态图片中显示服务器版本号                                                                                                                            |
 | showPlayerList                | 布尔值(默认`true`)            | 设置为`true`时，服务器状态图片中显示当前在线的部分玩家(某些服务器可能不提供此信息，或提供非玩家信息的任意文本)                                                                                            |
@@ -66,22 +67,72 @@
 | recordOnlinePlayer            | 字符串列表                    | 已启用历史在线人数记录的服务器                                                                                                                                        |
 | recordInterval                | 整数                       | 记录在线人数的时间间隔(秒)                                                                                                                                         |
 | recordLimit                   | 整数                       | 最长保留的在线人数记录时间(秒)                                                                                                                                       |
-| fontPath                      | 字符串(默认为空)                | 指定渲染图片时所使用的字体文件，如果指定了字体文件并且被成功加载，则不会使用`fontName`配置项(此配置项正常情况下无需使用。如果无法使用系统字体，请使用此配置项指定字体文件([#14](https://github.com/Under-estimate/McMotd/issues/14))) |
 | background                    | 字符串(默认为`#000000`)        | 指定渲染图片的背景，若以`#`开头，则指定的是RGB格式的纯色背景，否则会被解析为指向背景图片的路径                                                                                                     |
 | httpServerPort                | 整数(默认为0)                 | http API的运行端口号，设置为0以禁用http API                                                                                                                         |
 | httpServerMapping             | 字典(默认`{}`)               | http API中`minecraft服务器名`到`minecraft服务器地址`的对应关系                                                                                                         |
+| httpServerAllowAnyAddress     | 布尔值(默认`false`)           | 设置为`true`时，则不会使用`httpServerMapping`配置项，且允许通过http API查询任意服务器的信息                                                                                         |
+| httpServerEnableDeveloperApi  | 布尔值(默认`false`)           | 设置为`true`时，将额外启用`获取json格式服务器信息`和`获取服务器图标`的API，供高级用户使用                                                                                                  |
 | httpServerRequestCoolDown     | 整数(默认为3000)              | http API访问冷却时间(毫秒)，设置为0以取消访问冷却                                                                                                                         |
 | httpServerParallelRequest     | 整数(默认为32)                | http API最大支持的并行访问数，在没有访问冷却时间限制时，此配置项无效                                                                                                                 |
 | httpServerAccessRecordRefresh | 整数(默认为0)                 | http API访问计数的统计时长(秒)，设置为0以禁用访问计数                                                                                                                       |
-## HTTP API
-要开启插件的HTTP API功能，需要将配置文件中的`httpServerPort`设置为非零的可用端口，并配置`httpServerMapping`。  
-示例配置：
-> httpServerPort: 8092  
-> httpServerMapping:   
-> &nbsp;&nbsp;hypixel: hypixel.net  
-> &nbsp;&nbsp;earthmc: org.earthmc.net  
 
-以上述配置启动McMotd后，访问`http://localhost:8092/info/hypixel` 将会返回与`/mcp hypixel.net`相同的图片结果；访问`http://localhost:8092/info/earthmc` 将会返回与`/mcp org.earthmc.net`相同的图片结果。访问配置文件中未定义的服务器名（如`http://localhost:8092/info/foo` ）将不会返回有效的结果
+## HTTP API
+要开启插件的HTTP API功能，需要将配置文件中的`httpServerPort`设置为非零的可用端口
+### 图片结果查询接口
++ 仅启用HTTP API查询指定服务器  
+
+配置`httpServerMapping`为您希望允许查询的服务器列表。  
+示例配置：
+```yaml
+httpServerPort: 8092
+httpServerAllowAnyAddress: false
+httpServerMapping:   
+  hypixel: hypixel.net  
+  earthmc: org.earthmc.net  
+```
+
+以上述配置启动McMotd后，访问`http://localhost:8092/info/hypixel` 将会返回与`/mcp hypixel.net`相同的图片结果。访问配置文件中未定义的服务器名（如`http://localhost:8092/info/foo` ）将不会返回有效的结果
++ 启用HTTP API查询任意服务器  
+
+配置`httpServerAllowAnyAddress`为`true`。  
+示例配置：
+```yaml
+httpServerPort: 8092
+httpServerAllowAnyAddress: true
+httpServerMapping: {}
+```
+以上述配置启动McMotd后，访问`http://localhost:8092/info/hypixel.net` 将会返回与`/mcp hypixel.net`相同的图片结果
+
+### 高级查询接口
+访问以下接口需要配置`httpServerEnableDeveloperApi`为`true`
++ `/raw/{server}`获取json格式服务器信息
+成功示例
+```json5
+{
+  "online":true,
+  "favicon":"data:image/png;base64,...", // 服务器图标
+  "latency":258, // 服务器ping延迟
+  "motd":"{\"text\":\"A Minecraft Server\"}", // 服务器MOTD，可能为纯文本字符串或Text Component格式的JSON字符串
+  "players": {
+    "list":[], // (可空)玩家列表
+    "max":20, // (可空)最大玩家数量
+    "online":2 // (可空)当前在线玩家数量
+  },
+  "version":"1.20.1" // 服务器版本
+}
+```
+失败示例
+```json5
+{
+  "online":false,
+  "message":"指定的服务器地址无效:foo" // 错误原因
+}
+```
+
++ `/icon/{server}`获取服务器图标
+
+若服务器无法连接或没有图标，本接口会返回64*64的黑色图片
+
 ## 独立运行
 McMotd支持脱离mirai-console独立运行，可以用于测试或对接其他框架。如需要独立运行McMotd，请下载[release](https://github.com/Under-estimate/McMotd/releases/)
 中后缀为`.mirai.jar`的插件版本（其中包含独立运行所需的完整依赖项），并根据需求选择相应的启动命令（见下方）。

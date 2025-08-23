@@ -24,6 +24,8 @@ class McMotdStandaloneConfig : McMotdConfig {
     override var httpServerParallelRequest = 32
     override var httpServerRequestCoolDown = 3000
     override var httpServerAccessRecordRefresh = 0
+    override var httpServerAllowAnyAddress = false
+    override var httpServerEnableDeveloperApi = false
 
     fun save() {
         val file = File(savefile)

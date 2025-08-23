@@ -25,6 +25,8 @@ interface McMotdConfig {
     val httpServerParallelRequest : Int
     val httpServerRequestCoolDown : Int
     val httpServerAccessRecordRefresh : Int
+    val httpServerAllowAnyAddress: Boolean
+    val httpServerEnableDeveloperApi: Boolean
 
     fun checkConfig() {
         if(dnsServerList.isEmpty()) {

@@ -21,4 +21,6 @@ object McMotdPluginConfig : AutoSavePluginConfig("mcmotd"), McMotdConfig {
     override val httpServerParallelRequest by value(32)
     override val httpServerRequestCoolDown by value(3000)
     override val httpServerAccessRecordRefresh by value(0)
+    override val httpServerAllowAnyAddress by value(false)
+    override val httpServerEnableDeveloperApi by value(false)
 }

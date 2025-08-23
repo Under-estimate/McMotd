@@ -145,6 +145,8 @@ class APIOutputHandler(
 
     override fun onFailure() = fail(errBuilder.toString())
 
+    fun onFailure(message: String) = fail(message)
+
     override fun onSuccess(info : ServerInfo) = success(info)
 
     override fun afterPing() = Unit

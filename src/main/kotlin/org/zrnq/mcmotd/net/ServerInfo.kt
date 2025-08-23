@@ -1,13 +1,13 @@
 package org.zrnq.mcmotd.net
 
 import com.alibaba.fastjson.JSON
-import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
 import org.zrnq.mcmotd.*
+import org.zrnq.mcmotd.http.RawApiSuccessResult
 
 class ServerInfo(private val actualAddress: String,
                  response : String,
-                 private val latency : Int) {
+                 val latency : Int) {
     /**服务器图标*/
     val favicon : String?
     /**服务器描述*/
@@ -19,12 +19,19 @@ class ServerInfo(private val actualAddress: String,
     /**服务器宣称的最大人数*/
     private var maxPlayerCount : Int?
     /**服务器提供的部分在线玩家列表*/
-    private var samplePlayerList : String?
+    private var samplePlayerList : List<String>?
     /**本次查询用户所提供的原始服务器地址*/
-    private lateinit var originalAddress : String
+    lateinit var originalAddress : String
     /**服务器的显示地址*/
     private val serverAddress : String
         get() = if(configStorage.showTrueAddress) actualAddress else originalAddress
+    private val formattedSamplePlayers: String?
+        get() {
+            return samplePlayerList?.let {
+                if(it.isEmpty()) emptyPlayerListMsg
+                else it.joinToString(", ", limit = 10)
+            }
+        }
 
     init {
         val json = JSON.parseObject(response)
@@ -35,7 +42,7 @@ class ServerInfo(private val actualAddress: String,
 
         onlinePlayerCount = playerJson?.getIntValue("online")
         maxPlayerCount = playerJson?.getIntValue("max")
-        samplePlayerList = playerJson?.getJSONArray("sample")?.toPlayerListString(10)
+        samplePlayerList = playerJson?.getJSONArray("sample")?.map { (it as JSONObject).getString("name") }
     }
 
     fun setOriginalAddress(address : String) : ServerInfo {
@@ -72,7 +79,7 @@ class ServerInfo(private val actualAddress: String,
         if(!configStorage.showPlayerList) return playerCount.toString()
         playerCount.append("玩家列表: ")
         if(samplePlayerList == null) return playerCount.append("没有信息").toString()
-        return playerCount.append(jsonStringToHTML(JSON.parseObject("{\"text\":\"$samplePlayerList\"}"))).toString()
+        return playerCount.append(jsonStringToHTML(JSON.parseObject("{\"text\":\"$formattedSamplePlayers\"}"))).toString()
     }
 
 
@@ -102,19 +109,16 @@ class ServerInfo(private val actualAddress: String,
         if(maxPlayerCount == null) {
             maxPlayerCount = queryInfo.serverProperties["maxplayers"]?.toInt()
         }
-        if(samplePlayerList == null || samplePlayerList == emptyPlayerListMsg) {
-            samplePlayerList = if(queryInfo.playerList.isEmpty()) emptyPlayerListMsg
-            else queryInfo.playerList.joinToString(", ", limit = 10)
+        if(samplePlayerList.isNullOrEmpty()) {
+            samplePlayerList = queryInfo.playerList
         }
     }
 
-    companion object {
-        fun JSONArray?.toPlayerListString(limit: Int) : String? {
-            return if(this == null) null
-            else if(isEmpty()) emptyPlayerListMsg
-            else joinToString(", ", limit = limit) { (it as JSONObject).getString("name") }
-        }
+    fun toRawApiResult()= RawApiSuccessResult(
+        latency, description, favicon, version, maxPlayerCount, onlinePlayerCount, samplePlayerList
+    )
 
+    companion object {
         const val emptyPlayerListMsg = "空"
     }
 }
